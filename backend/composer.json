@@ -10,8 +10,15 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "bavix/laravel-wallet": "^12.1",
+        "filament/filament": "^4.0",
         "laravel/framework": "^13.17",
-        "laravel/tinker": "^3.0"
+        "laravel/reverb": "^1.12",
+        "laravel/sanctum": "^4.0",
+        "laravel/tinker": "^3.0",
+        "league/flysystem-aws-s3-v3": "^3.0",
+        "spatie/laravel-model-states": "^2.14",
+        "spatie/laravel-permission": "^8.3"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
