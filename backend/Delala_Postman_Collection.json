@@ -22,7 +22,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"full_name\": \"John Doe\",\n    \"phone\": \"0911000002\",\n    \"email\": \"johndoe@example.com\",\n    \"password\": \"password\",\n    \"password_confirmation\": \"password\"\n}",
+							"raw": "{\n    \"full_name\": \"John Doe\",\n    \"phone\": \"0911000002\",\n    \"email\": \"delivered@resend.dev\",\n    \"password\": \"password\",\n    \"password_confirmation\": \"password\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -54,7 +54,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"email\": \"johndoe@example.com\",\n    \"password\": \"password\"\n}",
+							"raw": "{\n    \"email\": \"delivered@resend.dev\",\n    \"password\": \"password\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -119,7 +119,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"email\": \"johndoe@example.com\"\n}",
+							"raw": "{\n    \"email\": \"delivered@resend.dev\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -151,7 +151,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"token\": \"<insert_token_from_email_here>\",\n    \"email\": \"johndoe@example.com\",\n    \"password\": \"newpassword123\",\n    \"password_confirmation\": \"newpassword123\"\n}",
+							"raw": "{\n    \"token\": \"<insert_token_from_email_here>\",\n    \"email\": \"delivered@resend.dev\",\n    \"password\": \"newpassword123\",\n    \"password_confirmation\": \"newpassword123\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -183,7 +183,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"phone\": \"0911000000\"\n}",
+							"raw": "{\n    \"phone\": \"0911000000\",\n    \"g-recaptcha-response\": \"test_token\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"

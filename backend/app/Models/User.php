@@ -18,7 +18,7 @@ use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable([
     'full_name', 'phone', 'email', 'password',
-    'type', 'status', 'guest_uuid', 'avatar_s3_key',
+    'type', 'status', 'guest_uuid', 'avatar_s3_key', 'phone_verified_at'
 ])]
 class User extends Authenticatable implements FilamentUser, HasName
 {

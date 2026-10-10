@@ -96,7 +96,13 @@ class AuthService
             } else {
                 // Existing user logging in via OTP
                 if (! $user->phone_verified_at) {
-                    $user->update(['phone_verified_at' => now()]);
+                    $user->phone_verified_at = now();
+                    
+                    if ($user->hasVerifiedEmail() && $user->status === 'unverified') {
+                        $user->status = 'active';
+                    }
+                    
+                    $user->save();
                 }
             }
 

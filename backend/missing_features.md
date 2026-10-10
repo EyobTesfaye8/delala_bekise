@@ -1,57 +1,70 @@
-# Missing Features - Authentication Module
+# Missing Features - KYC Module
 
-Based on the Software Requirements Specification (`srs.md`) and the current backend implementation, here is an analysis of the missing features in the Auth module:
+Based on the Software Requirements Specification (`srs.md`) and the current backend implementation, here is an analysis of the missing features in the KYC Module:
 
-## 1. Direct Registration (FR-1.3) [✅ IMPLEMENTED]
-- **Missing Endpoint:** There is no `POST /api/v1/auth/register` endpoint.
-- **SRS Requirement:** A new user must be able to register directly with `Full Name`, `Phone Number`, `Email`, and `Password`.
-- **Missing Logic:** The account must remain `UNVERIFIED` until both SMS OTP and Email magic-link are validated. Currently, there is no email verification/magic-link system implemented at all.
+## 1. KYC Submission Endpoint (Delala)
 
-## 2. Registered User Login & Logout [✅ IMPLEMENTED]
-- **Missing Endpoint:** There is no `POST /api/v1/auth/login` endpoint.
-- **Current State:** The `AuthController` now supports Email and Password login (`/login`) and token revocation (`/logout`).
+- **Missing Endpoint:** There is no `POST /api/v1/kyc` endpoint for Delalas to submit their documents.
+- **SRS Requirement:** A Delala must be able to upload an ID document and a Selfie. These must be stored in a private S3 bucket.
+- **Current State:** The `KycProfile` model exists, but there is no controller to handle the file uploads and create the record in the `UNDER_REVIEW` state.
 
-## 3. reCAPTCHA Validation (NFR-1.1)
-- **Missing Validation:** The `POST /api/v1/auth/send-otp` endpoint does not validate reCAPTCHA tokens.
-- **SRS Requirement:** To protect against SMS toll fraud, the `send-otp` endpoint must be protected by invisible reCAPTCHA v3. The rate limiting (3/hr per phone, 10/hr per IP) is implemented in `AppServiceProvider`, but the reCAPTCHA rule is entirely absent from the request validation.
+## 2. Admin KYC Queue (AR-1)
 
-## 4. Token Revocation (Logout) [✅ IMPLEMENTED]
-- **Missing Endpoint:** There is no `POST /api/v1/auth/logout` endpoint to revoke Sanctum tokens.
-- **Current State:** Handled alongside login.
+- **Missing Endpoint:** There is no `GET /api/v1/admin/kyc` endpoint.
+- **SRS Requirement:** Admins need a paginated list of all `UNDER_REVIEW` Delalas. This endpoint must generate and return 15-minute pre-signed S3 URLs so the admin can securely view the documents on the frontend.
+- **Current State:** Completely missing.
 
-## 5. Delala KYC State Machine (FR-2.1 / FR-2.2) (Auth-related constraints)
-- **Missing Middleware/Gate:** The SRS specifies that Delalas cannot view the Job feed, submit proposals, or initiate chats until their KYC status is `APPROVED`. 
-- **Current State:** There is no middleware or policy explicitly checking `isDelala()` AND `kycProfile->status == 'approved'` on those specific job/proposal routes.
+## 3. Admin KYC Actions (Approve / Reject)
 
-## 6. Forgot Password (Password Reset)
-- **Missing Endpoints:** There is no way for a registered user to reset their password if they forget it.
-- **Current State:** Standard Laravel password reset flow (via email) or OTP-based reset is missing. Needs endpoints for requesting a reset link and submitting the new password.
+- **Missing Endpoints:**
+  - `POST /api/v1/admin/kyc/{kyc}/approve`
+  - `POST /api/v1/admin/kyc/{kyc}/reject`
+- **SRS Requirement:** Admins must be able to approve or reject a KYC submission. Rejection requires a mandatory reason field.
+- **Current State:** Completely missing. State transition logic exists via `Spatie\ModelStates`, but no controllers trigger it.
 
-## Summary of Missing Auth Routes needed:
-```
-POST /auth/register (Direct Registration)
-POST /auth/login (Email + Password login)
-POST /auth/logout (Revoke token)
-POST /auth/verify-email (Magic link handling)
-POST /auth/forgot-password (Request reset link)
-POST /auth/reset-password (Submit new password)
-```
+## 4. Notifications
 
-## 7. Required From User
-Before beginning implementation of these missing features, the following configurations and credentials must be provided:
+- **Missing Logic:** When KYC is Approved or Rejected, the system must dispatch an asynchronous notification to the Delala (SMS, Email, and In-App).
+- **Current State:** Missing.
 
-1. **Email Service Provider (SMTP/API):**
-   - Required to send the Email Magic-Links for verification when a user registers (FR-1.3).
-   - *Action:* Please provide SMTP credentials (e.g., Mailtrap, Resend, AWS SES) or state if we should use Laravel's default `log` driver for local testing.
+## Summary of Next Steps
 
-2. **Frontend Application URL:**
-   - Required for generating correct Magic-Links for email verification.
-   - *Action:* Please specify the intended local frontend URL (e.g., `http://localhost:3000`).
+1. Create `KycController` for Delalas to upload documents.
+2. Create `Admin\KycController` for the admin queue and approval/rejection logic.
+3. Configure the `private` filesystem disk (S3/local mock) for secure document storage and pre-signed URL generation.
+4. Implement Notification classes for `KycApproved` and `KycRejected`.
 
-3. **Google reCAPTCHA v3 Keys:**
-   - Required for SMS Toll Fraud Protection (NFR-1.1).
-   - *Action:* Please provide a reCAPTCHA v3 Secret Key. Alternatively, state if we should implement a bypass for the `local` environment.
+---
 
-4. **SMS Gateway Credentials (Optional/Future):**
-   - Currently, the `SendSmsOtpJob` mocks SMS delivery by logging it to `laravel.log`. If you want real SMS delivery (e.g., via AfroMessage or EthioTelecom) implemented now, credentials for the gateway are needed.
-   - *Action:* Provide API keys/credentials for the SMS provider, or confirm we should continue mocking it for now.
+## 5. Proposed KYC Approval & Rejection Rules
+
+Before an Admin makes a decision, they should evaluate the submission against these criteria.
+
+**Criteria for ACCEPTANCE:**
+
+1. **Name Match:** The full name on the ID perfectly matches the `full_name` on the Delala's account.
+2. **Face Match:** The face in the uploaded selfie clearly matches the photo on the ID document.
+3. **Legibility:** The ID is clear, fully readable, and not cropped or cut off.
+4. **Validity:** The ID is a government-issued document (Kebele ID, Passport, Driver's License) and is **not expired**.
+
+**Standard REJECTION Reasons (Sent to Delala):**
+
+- `BLURRY_DOCUMENT`: "The uploaded ID is blurry, glaring, or unreadable. Please upload a clear, well-lit photo."
+- `NAME_MISMATCH`: "The name on your ID does not match your account name. Please contact support."
+- `FACE_MISMATCH`: "We could not confidently match your selfie to the photo on your ID. Please try taking a clearer selfie."
+- `EXPIRED_DOCUMENT`: "The provided ID document is expired. Please provide a valid, current ID."
+- `SUSPECTED_FRAUD`: "Your submission was flagged for irregularities and has been rejected."
+
+---
+
+## 6. Required From User
+
+To actually build this module, I will need the following decisions/configurations from you:
+
+1. **Storage Driver (AWS S3 vs Local):**
+   - The SRS states these documents must be stored in a private S3 bucket and accessed via 15-minute pre-signed URLs.
+   - *Action:* Do you want to provide **AWS S3 credentials (Key, Secret, Region, Bucket)** in the `.env` now? Or should I configure it to use Laravel's `local` private disk for now (which can still simulate secure URLs) so you don't have to pay for AWS during local development?
+
+2. **Admin Authentication:**
+   - Admins need to log in to access the `GET /api/v1/admin/kyc` queues. The SRS mentions "Internal SSO / 2FA" for Admins.
+   - *Action:* For now, should I just create a basic Admin seeder with a hardcoded email/password and standard Sanctum token login so we can test the admin endpoints via Postman?

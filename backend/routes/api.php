@@ -4,7 +4,10 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\EscrowController;
 use App\Http\Controllers\Api\JobController;
+use App\Http\Controllers\Api\KycController;
+use App\Http\Controllers\Api\Admin\KycController as AdminKycController;
 use App\Http\Controllers\Api\ProposalController;
+use App\Http\Middleware\EnsureKycApproved;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -35,11 +38,13 @@ Route::prefix('v1')->group(function () {
         });
     });
 
-    // Public feeds
-    Route::get('/jobs', [JobController::class, 'index']);
-    Route::get('/jobs/{job}', [JobController::class, 'show']);
+    // Public feeds (With KYC middleware for authenticated Delalas)
+    Route::middleware(EnsureKycApproved::class)->group(function () {
+        Route::get('/jobs', [JobController::class, 'index']);
+        Route::get('/jobs/{job}', [JobController::class, 'show']);
+    });
 
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', EnsureKycApproved::class])->group(function () {
         // Jobs
         Route::post('/jobs', [JobController::class, 'store']);
 
@@ -57,6 +62,17 @@ Route::prefix('v1')->group(function () {
         // Chat
         Route::get('/proposals/{proposal}/chat', [ChatController::class, 'getOrCreate']);
         Route::post('/chats/{chat}/messages', [ChatController::class, 'sendMessage']);
+        
+        // KYC Submission (Delala Only)
+        Route::post('/kyc', [KycController::class, 'submit']);
+    });
+    
+    // Admin Routes
+    Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
+        // KYC Queue Management
+        Route::get('/kyc', [AdminKycController::class, 'index']);
+        Route::post('/kyc/{kyc}/approve', [AdminKycController::class, 'approve']);
+        Route::post('/kyc/{kyc}/reject', [AdminKycController::class, 'reject']);
     });
 
     // Webhooks

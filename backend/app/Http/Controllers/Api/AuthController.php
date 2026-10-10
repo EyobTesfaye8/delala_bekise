@@ -12,6 +12,7 @@ use Illuminate\Validation\ValidationException;
 use App\Notifications\VerifyEmailMagicLink;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Auth\Events\PasswordReset;
+use App\Rules\Recaptcha;
 
 class AuthController extends Controller
 {
@@ -62,6 +63,7 @@ class AuthController extends Controller
 
         $request->validate([
             'phone' => ['required', 'string', 'regex:/^\+251[97]\d{8}$/'],
+            'g-recaptcha-response' => ['required', 'string', new Recaptcha()],
         ]);
 
         $this->authService->generateOtp($request->phone);
