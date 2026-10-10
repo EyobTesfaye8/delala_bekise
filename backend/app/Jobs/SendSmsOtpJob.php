@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class SendSmsOtpJob implements ShouldQueue
@@ -17,8 +18,20 @@ class SendSmsOtpJob implements ShouldQueue
 
     public function handle(): void
     {
-        // Integration with EthioTelecom or third-party SMS Gateway (like AfroMessage/Chapa SMS)
-        // For now, we log the OTP.
-        Log::info("Mock SMS Gateway: Sending OTP {$this->code} to {$this->phone}");
+        $message = "Your DelalaBekise authentication OTP is: {$this->code}. It is valid for 5 minutes. Do not share it with anyone.";
+        
+        $response = Http::withToken(env('AFROMESSAGE_API_KEY'))
+            ->post('https://api.afromessage.com/api/send', [
+                'to' => $this->phone,
+                'message' => $message,
+            ]);
+
+        $json = $response->json();
+
+        if ($response->failed() || ($json['acknowledge'] ?? '') === 'error') {
+            Log::error("AfroMessage SMS Failed: " . $response->body());
+        } else {
+            Log::info("AfroMessage SMS Sent to {$this->phone}.");
+        }
     }
 }

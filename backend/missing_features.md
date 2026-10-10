@@ -7,16 +7,17 @@ Based on the Software Requirements Specification (`srs.md`) and the current back
 - **SRS Requirement:** A new user must be able to register directly with `Full Name`, `Phone Number`, `Email`, and `Password`.
 - **Missing Logic:** The account must remain `UNVERIFIED` until both SMS OTP and Email magic-link are validated. Currently, there is no email verification/magic-link system implemented at all.
 
-## 2. Registered User Login (Email/Password)
+## 2. Registered User Login & Logout [✅ IMPLEMENTED]
 - **Missing Endpoint:** There is no `POST /api/v1/auth/login` endpoint.
-- **Current State:** The `AuthController` only supports logging in via SMS OTP. Registered Buyers and Delalas must be able to log in using their Email and Password.
+- **Current State:** The `AuthController` now supports Email and Password login (`/login`) and token revocation (`/logout`).
 
 ## 3. reCAPTCHA Validation (NFR-1.1)
 - **Missing Validation:** The `POST /api/v1/auth/send-otp` endpoint does not validate reCAPTCHA tokens.
 - **SRS Requirement:** To protect against SMS toll fraud, the `send-otp` endpoint must be protected by invisible reCAPTCHA v3. The rate limiting (3/hr per phone, 10/hr per IP) is implemented in `AppServiceProvider`, but the reCAPTCHA rule is entirely absent from the request validation.
 
-## 4. Token Revocation (Logout)
+## 4. Token Revocation (Logout) [✅ IMPLEMENTED]
 - **Missing Endpoint:** There is no `POST /api/v1/auth/logout` endpoint to revoke Sanctum tokens.
+- **Current State:** Handled alongside login.
 
 ## 5. Delala KYC State Machine (FR-2.1 / FR-2.2) (Auth-related constraints)
 - **Missing Middleware/Gate:** The SRS specifies that Delalas cannot view the Job feed, submit proposals, or initiate chats until their KYC status is `APPROVED`. 

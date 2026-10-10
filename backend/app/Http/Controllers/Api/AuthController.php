@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use App\Notifications\VerifyEmailMagicLink;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Auth\Events\PasswordReset;
 
 class AuthController extends Controller
 {
@@ -21,9 +23,11 @@ class AuthController extends Controller
      */
     public function register(Request $request): JsonResponse
     {
+        $request->merge(['phone' => $this->authService->normalizePhone($request->phone ?? '')]);
+
         $request->validate([
             'full_name' => ['required', 'string', 'max:255'],
-            'phone' => ['required', 'string', 'regex:/^(\+251|0)[97]\d{8}$/', 'unique:users,phone'],
+            'phone' => ['required', 'string', 'regex:/^\+251[97]\d{8}$/', 'unique:users,phone'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
@@ -54,8 +58,10 @@ class AuthController extends Controller
      */
     public function sendOtp(Request $request): JsonResponse
     {
+        $request->merge(['phone' => $this->authService->normalizePhone($request->phone ?? '')]);
+
         $request->validate([
-            'phone' => ['required', 'string', 'regex:/^(\+251|0)[97]\d{8}$/'],
+            'phone' => ['required', 'string', 'regex:/^\+251[97]\d{8}$/'],
         ]);
 
         $this->authService->generateOtp($request->phone);
@@ -70,8 +76,10 @@ class AuthController extends Controller
      */
     public function verifyOtp(Request $request): JsonResponse
     {
+        $request->merge(['phone' => $this->authService->normalizePhone($request->phone ?? '')]);
+
         $request->validate([
-            'phone' => ['required', 'string'],
+            'phone' => ['required', 'string', 'regex:/^\+251[97]\d{8}$/'],
             'code' => ['required', 'string', 'size:6'],
         ]);
 
@@ -127,6 +135,50 @@ class AuthController extends Controller
     }
 
     /**
+     * Login via Email and Password.
+     */
+    public function login(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email' => ['required', 'string', 'email'],
+            'password' => ['required', 'string'],
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (! $user || ! Hash::check($request->password, $user->password)) {
+            throw ValidationException::withMessages([
+                'email' => ['The provided credentials do not match our records.'],
+            ]);
+        }
+
+        // Optional: Check if suspended
+        if ($user->isSuspended()) {
+            return response()->json(['message' => 'Account suspended.'], 403);
+        }
+
+        $token = $user->createToken('auth_token', ['*'])->plainTextToken;
+
+        return response()->json([
+            'message' => 'Login successful',
+            'user' => $user,
+            'token' => $token,
+        ]);
+    }
+
+    /**
+     * Logout user (revoke token).
+     */
+    public function logout(Request $request): JsonResponse
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json([
+            'message' => 'Successfully logged out',
+        ]);
+    }
+
+    /**
      * Handle Email Magic Link Verification.
      */
     public function verifyEmail(Request $request, $id, $hash)
@@ -156,6 +208,57 @@ class AuthController extends Controller
         // To be easily testable via Postman, we can return JSON or HTML.
         return response()->json([
             'message' => 'Email verified successfully!',
+        ]);
+    }
+
+    /**
+     * Send Password Reset Link.
+     */
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $request->validate(['email' => ['required', 'email']]);
+
+        $status = Password::broker()->sendResetLink(
+            $request->only('email')
+        );
+
+        if ($status === Password::RESET_LINK_SENT) {
+            return response()->json(['message' => __($status)]);
+        }
+
+        throw ValidationException::withMessages([
+            'email' => [__($status)],
+        ]);
+    }
+
+    /**
+     * Reset Password.
+     */
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'token' => ['required'],
+            'email' => ['required', 'email'],
+            'password' => ['required', 'min:8', 'confirmed'],
+        ]);
+
+        $status = Password::broker()->reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->forceFill([
+                    'password' => Hash::make($password)
+                ])->save();
+
+                event(new PasswordReset($user));
+            }
+        );
+
+        if ($status === Password::PASSWORD_RESET) {
+            return response()->json(['message' => __($status)]);
+        }
+
+        throw ValidationException::withMessages([
+            'email' => [__($status)],
         ]);
     }
 }

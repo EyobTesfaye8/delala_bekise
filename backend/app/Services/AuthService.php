@@ -11,6 +11,21 @@ use Illuminate\Support\Str;
 class AuthService
 {
     /**
+     * Normalize phone number to international format (+251)
+     */
+    public function normalizePhone(string $phone): string
+    {
+        $phone = preg_replace('/[^\d+]/', '', $phone);
+        if (str_starts_with($phone, '09') || str_starts_with($phone, '07')) {
+            return '+251' . substr($phone, 1);
+        }
+        if (str_starts_with($phone, '251')) {
+            return '+' . $phone;
+        }
+        return $phone;
+    }
+
+    /**
      * Generate an OTP for a given phone number.
      */
     public function generateOtp(string $phone, string $purpose = 'auth'): OtpCode

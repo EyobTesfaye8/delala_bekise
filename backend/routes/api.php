@@ -13,7 +13,11 @@ Route::prefix('v1')->group(function () {
     Route::prefix('auth')->group(function () {
         // Registration & Login
         Route::post('/register', [AuthController::class, 'register']);
-        Route::post('/login', [AuthController::class, 'login']); // Will implement next
+        Route::post('/login', [AuthController::class, 'login']);
+
+        // Password Reset
+        Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+        Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.reset');
 
         // NFR-1.1: SMS rate limiting (3/hr per phone, 10/hr per IP)
         Route::post('/send-otp', [AuthController::class, 'sendOtp'])->middleware('throttle:send_otp');
@@ -24,6 +28,7 @@ Route::prefix('v1')->group(function () {
 
         Route::middleware('auth:sanctum')->group(function () {
             Route::post('/migrate', [AuthController::class, 'migrateGuest']);
+            Route::post('/logout', [AuthController::class, 'logout']);
             Route::get('/me', function (Request $request) {
                 return $request->user();
             });
