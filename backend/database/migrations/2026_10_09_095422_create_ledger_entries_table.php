@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::dropIfExists('ledger_entries');
+        // ledger_entries is already created in the ledger_accounts migration
     }
 
     public function down(): void

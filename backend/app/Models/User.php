@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasName;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -17,7 +20,7 @@ use Spatie\Permission\Traits\HasRoles;
     'full_name', 'phone', 'email', 'password',
     'type', 'status', 'guest_uuid', 'avatar_s3_key',
 ])]
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser, HasName
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
@@ -28,9 +31,9 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at'   => 'datetime',
-            'phone_verified_at'   => 'datetime',
-            'password'            => 'hashed',
+            'email_verified_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
+            'password' => 'hashed',
         ];
     }
 
@@ -90,5 +93,16 @@ class User extends Authenticatable
     public function averageRating(): float
     {
         return (float) $this->ratingsReceived()->avg('stars');
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        // For security, only admins can access the filament panel
+        return $this->isAdmin();
+    }
+
+    public function getFilamentName(): string
+    {
+        return $this->full_name ?? 'User';
     }
 }

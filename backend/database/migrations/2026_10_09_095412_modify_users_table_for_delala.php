@@ -9,6 +9,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
+            if (env('DB_CONNECTION') === 'sqlite' || env('DB_CONNECTION') === 'testing') {
+                $table->dropUnique('users_email_unique');
+            } else {
+                $table->dropUnique('users_email_unique');
+            }
             $table->dropColumn(['name', 'email', 'password', 'email_verified_at', 'remember_token']);
         });
 
