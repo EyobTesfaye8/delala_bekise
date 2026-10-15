@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Middleware\AttachRequestId;
+use App\Http\Middleware\EnsureDelalaIsApproved;
+use App\Http\Middleware\ThrottleOtp;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -14,10 +18,31 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Register named middleware aliases
+        $middleware->alias([
+            'delala.approved' => EnsureDelalaIsApproved::class,
+            'otp.throttle' => ThrottleOtp::class,
+        ]);
+
+        // Append X-Request-ID to all API requests (NFR-OBS-1)
+        $middleware->appendToGroup('api', AttachRequestId::class);
+
+        // Trust proxies for correct IP detection
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Always return JSON for API routes
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // Standardise 401 authentication error
+        $exceptions->render(function (AuthenticationException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json([
+                    'error' => 'UNAUTHENTICATED',
+                    'message' => 'Authentication required.',
+                ], 401);
+            }
+        });
     })->create();

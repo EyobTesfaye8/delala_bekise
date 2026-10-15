@@ -196,35 +196,91 @@ return [
     |
     */
 
+    /**
+     * Queue isolation topology per SRS NFR-PERF-2.
+     * Heavy image/notification tasks NEVER block financial or auth tasks.
+     *
+     * Priority order (highest → lowest):
+     *  1. critical_financial — Webhooks, Ledger splits, Auto-release timers
+     *  2. high_auth          — OTP SMS dispatch
+     *  3. default            — WebSocket broadcasts, Push notifications
+     *  4. low_maintenance    — Purge unverified users, nightly reconciliation
+     */
     'defaults' => [
-        'supervisor-1' => [
+        // Critical financial queue — highest priority, dedicated processes
+        'supervisor-financial' => [
+            'connection' => 'redis',
+            'queue' => ['critical_financial'],
+            'balance' => 'auto',
+            'autoScalingStrategy' => 'time',
+            'maxProcesses' => 5,
+            'minProcesses' => 2,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 256,
+            'tries' => 3,
+            'timeout' => 90,
+            'nice' => 0,
+        ],
+        // Auth OTP queue — high priority, fast turnaround
+        'supervisor-auth' => [
+            'connection' => 'redis',
+            'queue' => ['high_auth'],
+            'balance' => 'auto',
+            'autoScalingStrategy' => 'time',
+            'maxProcesses' => 3,
+            'minProcesses' => 1,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 128,
+            'tries' => 3,
+            'timeout' => 30,
+            'nice' => 0,
+        ],
+        // Default queue — notifications, WebSocket broadcasts
+        'supervisor-default' => [
             'connection' => 'redis',
             'queue' => ['default'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
-            'maxProcesses' => 1,
+            'maxProcesses' => 5,
+            'minProcesses' => 1,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 128,
+            'tries' => 3,
+            'timeout' => 60,
+            'nice' => 5,
+        ],
+        // Low-maintenance queue — crons, purges, reconciliation
+        'supervisor-maintenance' => [
+            'connection' => 'redis',
+            'queue' => ['low_maintenance'],
+            'balance' => 'simple',
+            'autoScalingStrategy' => 'time',
+            'maxProcesses' => 2,
+            'minProcesses' => 1,
             'maxTime' => 0,
             'maxJobs' => 0,
             'memory' => 128,
             'tries' => 1,
-            'timeout' => 60,
-            'nice' => 0,
+            'timeout' => 300,
+            'nice' => 10,
         ],
     ],
 
     'environments' => [
         'production' => [
-            'supervisor-1' => [
-                'maxProcesses' => 10,
-                'balanceMaxShift' => 1,
-                'balanceCooldown' => 3,
-            ],
+            'supervisor-financial' => ['maxProcesses' => 10, 'minProcesses' => 3],
+            'supervisor-auth' => ['maxProcesses' => 5, 'minProcesses' => 2],
+            'supervisor-default' => ['maxProcesses' => 10, 'minProcesses' => 2],
+            'supervisor-maintenance' => ['maxProcesses' => 3, 'minProcesses' => 1],
         ],
-
         'local' => [
-            'supervisor-1' => [
-                'maxProcesses' => 3,
-            ],
+            'supervisor-financial' => ['maxProcesses' => 2, 'minProcesses' => 1],
+            'supervisor-auth' => ['maxProcesses' => 1, 'minProcesses' => 1],
+            'supervisor-default' => ['maxProcesses' => 2, 'minProcesses' => 1],
+            'supervisor-maintenance' => ['maxProcesses' => 1, 'minProcesses' => 1],
         ],
     ],
 

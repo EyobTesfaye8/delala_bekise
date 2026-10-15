@@ -35,4 +35,41 @@ return [
         ],
     ],
 
+    // ─── AfroMessage SMS (Primary Provider) ──────────────────────────────
+    'afromessage' => [
+        'api_key' => env('AFROMESSAGE_API_KEY'),
+        'sender_id' => env('AFROMESSAGE_SENDER_ID', 'Delala'),
+        'endpoint' => 'https://api.afromessage.com/api/send',
+    ],
+
+    // ─── Chapa Payment Gateway ────────────────────────────────────────────
+    'chapa' => [
+        'public_key' => env('CHAPA_PUBLIC_KEY'),
+        'secret_key' => env('CHAPA_PRIVATE_KEY'),
+        'webhook_secret' => env('CHAPA_WEBHOOK_SECRET', 'delala_dummy_webhook_secret_change_in_prod'),
+        'base_url' => env('CHAPA_BASE_URL', 'https://api.chapa.co/v1'),
+    ],
+
+    // ─── Firebase (FCM Push + Alerting) ──────────────────────────────────
+    'firebase' => [
+        'project_id' => env('FIREBASE_PROJECT_ID'),
+        'api_key' => env('FIREBASE_API_KEY'),
+        'credentials_json' => env('FIREBASE_CREDENTIALS_JSON'),
+        'messaging_sender_id' => env('FIREBASE_MESSAGING_SENDER_ID'),
+        'app_id' => env('FIREBASE_APP_ID'),
+    ],
+
+    // ─── Google reCAPTCHA v3 ──────────────────────────────────────────────
+    'recaptcha' => [
+        'site_key' => env('RECAPTCHA_SITE_KEY'),
+        'secret_key' => env('RECAPTCHA_SECRET_KEY'),
+    ],
+
+    // ─── Google OAuth ─────────────────────────────────────────────────────
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', '/auth/google/callback'),
+    ],
+
 ];
