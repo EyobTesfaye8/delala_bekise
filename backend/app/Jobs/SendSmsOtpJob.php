@@ -19,7 +19,7 @@ class SendSmsOtpJob implements ShouldQueue
     public function handle(): void
     {
         $message = "Your DelalaBekise authentication OTP is: {$this->code}. It is valid for 5 minutes. Do not share it with anyone.";
-        
+
         $response = Http::withToken(env('AFROMESSAGE_API_KEY'))
             ->post('https://api.afromessage.com/api/send', [
                 'to' => $this->phone,
@@ -29,7 +29,7 @@ class SendSmsOtpJob implements ShouldQueue
         $json = $response->json();
 
         if ($response->failed() || ($json['acknowledge'] ?? '') === 'error') {
-            Log::error("AfroMessage SMS Failed: " . $response->body());
+            Log::error('AfroMessage SMS Failed: '.$response->body());
         } else {
             Log::info("AfroMessage SMS Sent to {$this->phone}.");
         }

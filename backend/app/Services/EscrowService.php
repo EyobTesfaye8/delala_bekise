@@ -124,11 +124,6 @@ class EscrowService
                     }
                 });
 
-            // Set THIS proposal's chat to read-only too (negotiation is over)
-            if ($proposal->chat) {
-                $proposal->chat->update(['is_read_only' => true]);
-            }
-
             // 4. Update Escrow State and write Ledger Entries
             $escrow->update([
                 'chapa_paid_at' => now(),

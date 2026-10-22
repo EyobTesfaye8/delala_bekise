@@ -90,6 +90,22 @@ class ChapaService
     }
 
     /**
+     * Query Chapa verification API directly (circuit breaker / polling fallback).
+     */
+    public function verifyTransaction(string $txRef): ?array
+    {
+        $response = Http::withToken($this->secretKey)
+            ->timeout(10)
+            ->get("{$this->baseUrl}/transaction/verify/{$txRef}");
+
+        if ($response->successful() && $response->json('status') === 'success') {
+            return $response->json('data');
+        }
+
+        return null;
+    }
+
+    /**
      * Verify the Chapa webhook signature.
      */
     public function verifyWebhookSignature(string $payload, string $signature): bool

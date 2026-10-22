@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Storage;
 class KycController extends Controller
 {
     /**
-     * Get paginated list of KYC profiles under review.
+     * Get paginated list of KYC profiles under review (AR-1).
      */
     public function index(Request $request): JsonResponse
     {
@@ -27,14 +27,24 @@ class KycController extends Controller
 
         // Map over the results to append 15-minute pre-signed S3 URLs
         $profiles->getCollection()->transform(function ($kyc) {
-            $kyc->id_document_url = Storage::disk('s3')->temporaryUrl(
-                $kyc->id_document_s3_key,
-                now()->addMinutes(15)
-            );
-            $kyc->selfie_url = Storage::disk('s3')->temporaryUrl(
-                $kyc->selfie_s3_key,
-                now()->addMinutes(15)
-            );
+            try {
+                $kyc->id_document_url = Storage::disk('s3')->temporaryUrl(
+                    $kyc->id_document_s3_key,
+                    now()->addMinutes(15)
+                );
+                $kyc->id_document_back_url = $kyc->id_document_back_s3_key
+                    ? Storage::disk('s3')->temporaryUrl($kyc->id_document_back_s3_key, now()->addMinutes(15))
+                    : null;
+                $kyc->selfie_url = Storage::disk('s3')->temporaryUrl(
+                    $kyc->selfie_s3_key,
+                    now()->addMinutes(15)
+                );
+            } catch (\Throwable $e) {
+                $kyc->id_document_url = null;
+                $kyc->id_document_back_url = null;
+                $kyc->selfie_url = null;
+            }
+
             return $kyc;
         });
 
@@ -42,7 +52,7 @@ class KycController extends Controller
     }
 
     /**
-     * Approve a KYC profile.
+     * Approve a KYC profile (AR-1).
      */
     public function approve(Request $request, KycProfile $kyc): JsonResponse
     {
@@ -57,18 +67,19 @@ class KycController extends Controller
             'rejection_reason' => null,
         ]);
 
-        $kyc->user->notify(new KycApproved());
+        $kyc->user->notify(new KycApproved);
 
         return response()->json(['message' => 'KYC Profile Approved']);
     }
 
     /**
-     * Reject a KYC profile.
+     * Reject a KYC profile (AR-1).
      */
     public function reject(Request $request, KycProfile $kyc): JsonResponse
     {
         $request->validate([
-            'reason' => 'required|string|max:1000',
+            'reason' => ['required', 'string', 'max:1000'],
+            'rejection_code' => ['nullable', 'string', 'in:BLURRY_DOCUMENT,NAME_MISMATCH,FACE_MISMATCH,EXPIRED_DOCUMENT,SUSPECTED_FRAUD'],
         ]);
 
         if (! $kyc->status->canTransitionTo(Rejected::class)) {

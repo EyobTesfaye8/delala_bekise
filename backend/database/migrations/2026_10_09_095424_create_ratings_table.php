@@ -17,7 +17,7 @@ return new class extends Migration
             $table->text('review')->nullable();
             $table->timestamps();
 
-            $table->unique('escrow_transaction_id'); // one rating per completed escrow
+            $table->index('escrow_transaction_id');
         });
     }
 

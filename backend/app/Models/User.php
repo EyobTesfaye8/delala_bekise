@@ -18,7 +18,9 @@ use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable([
     'full_name', 'phone', 'email', 'password',
-    'type', 'status', 'guest_uuid', 'avatar_s3_key', 'phone_verified_at'
+    'type', 'status', 'guest_uuid', 'avatar_s3_key', 'phone_verified_at',
+    'circumvention_strike_count', 'login_attempt_count', 'locked_until',
+    'totp_secret', 'totp_enabled_at', 'fcm_token',
 ])]
 class User extends Authenticatable implements FilamentUser, HasName
 {
@@ -33,8 +35,17 @@ class User extends Authenticatable implements FilamentUser, HasName
         return [
             'email_verified_at' => 'datetime',
             'phone_verified_at' => 'datetime',
+            'locked_until' => 'datetime',
+            'totp_enabled_at' => 'datetime',
+            'login_attempt_count' => 'integer',
+            'circumvention_strike_count' => 'integer',
             'password' => 'hashed',
         ];
+    }
+
+    public function isLocked(): bool
+    {
+        return $this->locked_until && $this->locked_until->isFuture();
     }
 
     public function isGuest(): bool
@@ -88,11 +99,11 @@ class User extends Authenticatable implements FilamentUser, HasName
     }
 
     /**
-     * Average star rating for a Delala.
+     * Average star rating for a Delala (revealed reviews only).
      */
     public function averageRating(): float
     {
-        return (float) $this->ratingsReceived()->avg('stars');
+        return round((float) ($this->ratingsReceived()->where('is_revealed', true)->avg('stars') ?? 0.0), 1);
     }
 
     public function canAccessPanel(Panel $panel): bool

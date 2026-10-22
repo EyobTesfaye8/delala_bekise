@@ -4,15 +4,15 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Notifications\VerifyEmailMagicLink;
+use App\Rules\Recaptcha;
 use App\Services\AuthService;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
-use App\Notifications\VerifyEmailMagicLink;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Auth\Events\PasswordReset;
-use App\Rules\Recaptcha;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -46,7 +46,7 @@ class AuthController extends Controller
         $this->authService->generateOtp($user->phone);
 
         // Send Magic Link to Email
-        $user->notify(new VerifyEmailMagicLink());
+        $user->notify(new VerifyEmailMagicLink);
 
         return response()->json([
             'message' => 'Registration successful. Please verify your phone and email.',
@@ -63,7 +63,7 @@ class AuthController extends Controller
 
         $request->validate([
             'phone' => ['required', 'string', 'regex:/^\+251[97]\d{8}$/'],
-            'g-recaptcha-response' => ['required', 'string', new Recaptcha()],
+            'g-recaptcha-response' => ['required', 'string', new Recaptcha],
         ]);
 
         $this->authService->generateOtp($request->phone);
@@ -117,9 +117,16 @@ class AuthController extends Controller
             return response()->json(['message' => 'User is already registered.'], 400);
         }
 
+        if (User::where('email', $request->email)->where('id', '!=', $user->id)->exists()) {
+            return response()->json([
+                'message' => 'The provided email is already registered to another account.',
+                'error_code' => 'EMAIL_ALREADY_REGISTERED',
+            ], 409);
+        }
+
         $request->validate([
             'full_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'email' => ['required', 'string', 'email', 'max:255'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
@@ -148,9 +155,34 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
+        if ($user && $user->isLocked()) {
+            $minutesRemaining = (int) ceil(now()->diffInSeconds($user->locked_until) / 60);
+
+            return response()->json([
+                'message' => "Account is temporarily locked due to 5 consecutive failed login attempts. Please try again after {$minutesRemaining} minutes.",
+                'error_code' => 'ACCOUNT_LOCKED',
+                'locked_until' => $user->locked_until->toIso8601String(),
+            ], 423);
+        }
+
         if (! $user || ! Hash::check($request->password, $user->password)) {
+            if ($user) {
+                $user->increment('login_attempt_count');
+                if ($user->login_attempt_count >= 5) {
+                    $user->update(['locked_until' => now()->addMinutes(15)]);
+                }
+            }
+
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials do not match our records.'],
+            ]);
+        }
+
+        // Reset login attempts on successful login
+        if ($user->login_attempt_count > 0 || $user->locked_until !== null) {
+            $user->update([
+                'login_attempt_count' => 0,
+                'locked_until' => null,
             ]);
         }
 
@@ -183,8 +215,11 @@ class AuthController extends Controller
     /**
      * Handle Email Magic Link Verification.
      */
-    public function verifyEmail(Request $request, $id, $hash)
+    public function verifyEmail(Request $request, $id = null, $hash = null)
     {
+        $id = $id ?? $request->route('id') ?? $request->query('id');
+        $hash = $hash ?? $request->route('hash') ?? $request->query('hash');
+
         $user = User::findOrFail($id);
 
         if (! hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
@@ -197,7 +232,7 @@ class AuthController extends Controller
 
         if (! $user->hasVerifiedEmail()) {
             $user->markEmailAsVerified();
-            
+
             // If phone is also verified, switch status to active
             if ($user->phone_verified_at) {
                 $user->update(['status' => 'active']);
@@ -248,7 +283,7 @@ class AuthController extends Controller
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function ($user, $password) {
                 $user->forceFill([
-                    'password' => Hash::make($password)
+                    'password' => Hash::make($password),
                 ])->save();
 
                 event(new PasswordReset($user));

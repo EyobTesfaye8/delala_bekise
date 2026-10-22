@@ -1,0 +1,1778 @@
+{
+    "info": {
+        "_postman_id": "c11fbf36-delala-backend-api-v2",
+        "name": "Delala Platform API (Enterprise v4.0)",
+        "description": "Enterprise Escrow-Backed Broker Marketplace API Collection. Follows SRS v2.0 specifications. Progressively maintained with each completed module.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "01. Authentication & Security (Module 2)",
+            "item": [
+                {
+                    "name": "Send OTP (Guest or Auth)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"phone\": \"0911000000\",\n    \"g-recaptcha-response\": \"test_token\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/send-otp",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "send-otp"
+                            ]
+                        },
+                        "description": "Requests a 6-digit SMS OTP. Enforces 60-second cooldown, max 3/hour per phone, max 10/hour per IP, and requires reCAPTCHA v3 (pass 'test_token' in local/testing)."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Verify OTP (Login / Guest Session)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var jsonData = pm.response.json();",
+                                    "if (jsonData.token) {",
+                                    "    pm.collectionVariables.set(\"token\", jsonData.token);",
+                                    "    if (jsonData.user && jsonData.user.type === 'guest') {",
+                                    "        pm.collectionVariables.set(\"guest_token\", jsonData.token);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"phone\": \"0911000000\",\n    \"code\": \"123456\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/verify-otp",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "verify-otp"
+                            ]
+                        },
+                        "description": "Verifies 6-digit OTP. Returns Sanctum token and user profile. Automatically saves token to collection variables."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Direct Register (Buyer / Delala)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"full_name\": \"Abebe Kebede\",\n    \"phone\": \"0912000000\",\n    \"email\": \"abebe@example.com\",\n    \"password\": \"password123\",\n    \"password_confirmation\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/register",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "register"
+                            ]
+                        },
+                        "description": "Direct registration for permanent accounts. Account starts in 'unverified' status until SMS OTP and Email Magic link are confirmed."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Login (Email & Password)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var jsonData = pm.response.json();",
+                                    "if (jsonData.token) {",
+                                    "    pm.collectionVariables.set(\"token\", jsonData.token);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"abebe@example.com\",\n    \"password\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "description": "Authenticates registered user. Locks account for 15 minutes upon 5 consecutive failed attempts (HTTP 423 Locked)."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "JIT Guest Migration to Registered Buyer",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{guest_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"full_name\": \"Abebe Kebede\",\n    \"email\": \"abebe.new@example.com\",\n    \"password\": \"password123\",\n    \"password_confirmation\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/migrate",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "migrate"
+                            ]
+                        },
+                        "description": "Upgrades an authenticated Guest Buyer in-place to permanent Registered Buyer. Returns HTTP 409 Conflict with EMAIL_ALREADY_REGISTERED if email exists."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Authenticated User Profile (/me)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/me",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "me"
+                            ]
+                        },
+                        "description": "Returns profile of authenticated token owner."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Forgot Password (Request Reset Link)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"abebe@example.com\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/forgot-password",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "forgot-password"
+                            ]
+                        },
+                        "description": "Dispatches password reset link via Resend email."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Reset Password",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"token\": \"<reset_token_from_email>\",\n    \"email\": \"abebe@example.com\",\n    \"password\": \"newpassword123\",\n    \"password_confirmation\": \"newpassword123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/reset-password",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "reset-password"
+                            ]
+                        },
+                        "description": "Resets user password using the token sent to their email."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Logout (Revoke Token)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/logout",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "logout"
+                            ]
+                        },
+                        "description": "Revokes current Sanctum access token."
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Module 1 & 2: User Onboarding, Session Recovery, Rate Limiting, Brute Force Protection, and Token Lifecycle."
+        },
+        {
+            "name": "02. Media Upload Pipeline (Module 3)",
+            "item": [
+                {
+                    "name": "Request Upload Slot (Pre-Signed S3 PUT URL)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"file_type\": \"kyc_id\",\n    \"mime_type\": \"image/jpeg\",\n    \"file_size_bytes\": 2048000\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/media/presign",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "media",
+                                "presign"
+                            ]
+                        },
+                        "description": "Generates a 10-minute AWS S3/R2 pre-signed PUT URL. Client uploads binary directly to S3 and passes the returned s3_key when submitting KYC or proposal forms."
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Module 3: Direct S3 Pre-Signed Upload Architecture (SRS \u00a79.1). Zero file binaries pass through Laravel workers."
+        },
+        {
+            "name": "03. Delala KYC & Payout Profiles (Module 4)",
+            "item": [
+                {
+                    "name": "Get KYC Status & Temporary Document URLs",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/kyc",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "kyc"
+                            ]
+                        },
+                        "description": "Returns current Delala KYC status (pending_submission, under_review, approved, rejected) and 15-minute temporary URLs to view uploaded documents."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Submit KYC Documents (S3 Keys)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"document_type\": \"kebele_id\",\n    \"id_document_s3_key\": \"kyc/2/front_sample.jpg\",\n    \"id_document_back_s3_key\": \"kyc/2/back_sample.jpg\",\n    \"selfie_s3_key\": \"kyc/2/selfie_sample.jpg\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/kyc",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "kyc"
+                            ]
+                        },
+                        "description": "Submits Delala KYC artifacts using pre-signed S3 keys. Transitions status to under_review."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "List Payout Destinations",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/payout-destinations",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "payout-destinations"
+                            ]
+                        },
+                        "description": "Lists all registered Ethiopian bank and Telebirr accounts for the authenticated Delala."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Register Payout Destination",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"bank_code\": \"CBE\",\n    \"bank_name\": \"Commercial Bank of Ethiopia\",\n    \"account_number\": \"1000123456789\",\n    \"account_holder_name\": \"Abebe Kebede\",\n    \"is_default\": true\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/payout-destinations",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "payout-destinations"
+                            ]
+                        },
+                        "description": "Registers a new bank/Telebirr payout destination for receiving withdrawals."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Set Default Payout Destination",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/payout-destinations/1/set-default",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "payout-destinations",
+                                "1",
+                                "set-default"
+                            ]
+                        },
+                        "description": "Sets the designated destination as the default withdrawal account."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Payout Destination",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/payout-destinations/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "payout-destinations",
+                                "1"
+                            ]
+                        },
+                        "description": "Deletes a registered payout destination."
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Module 4: Delala Onboarding, Verification, Document Uploads, and Payout Profile Management."
+        },
+        {
+            "name": "04. Admin KYC Verification (Module 4)",
+            "item": [
+                {
+                    "name": "Get KYC Queue (Under Review)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/kyc?page=1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "kyc"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "description": "Paginated FIFO queue of Delalas awaiting review with 15-minute temporary URLs for ID front, back, and selfie."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Approve Delala KYC",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/kyc/1/approve",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "kyc",
+                                "1",
+                                "approve"
+                            ]
+                        },
+                        "description": "Approves KYC submission, unlocks Delala feed/proposal access, and dispatches notification."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Reject Delala KYC",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"reason\": \"The uploaded Kebele ID photo is blurry and illegible. Please upload a clear photo.\",\n    \"rejection_code\": \"BLURRY_DOCUMENT\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/kyc/1/reject",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "kyc",
+                                "1",
+                                "reject"
+                            ]
+                        },
+                        "description": "Rejects KYC with reason code (BLURRY_DOCUMENT, NAME_MISMATCH, FACE_MISMATCH, EXPIRED_DOCUMENT, SUSPECTED_FRAUD) and notifies user."
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Module 4 (Admin): Back-office KYC review queue and verification decision engine."
+        },
+        {
+            "name": "05. Jobs & Taxonomy (Module 5)",
+            "item": [
+                {
+                    "name": "List Jobs (Global Feed)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/jobs?cursor=&q=&category_id=&min_budget=&max_budget=",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "jobs"
+                            ],
+                            "query": [
+                                {
+                                    "key": "cursor",
+                                    "value": "",
+                                    "description": "Pagination cursor"
+                                },
+                                {
+                                    "key": "q",
+                                    "value": "",
+                                    "description": "Search keyword"
+                                },
+                                {
+                                    "key": "category_id",
+                                    "value": "",
+                                    "description": "Leaf category ID"
+                                },
+                                {
+                                    "key": "min_budget",
+                                    "value": "",
+                                    "description": "Min budget in Santim"
+                                },
+                                {
+                                    "key": "max_budget",
+                                    "value": "",
+                                    "description": "Max budget in Santim"
+                                }
+                            ]
+                        },
+                        "description": "Cursor-paginated feed. Ommits jobs that an authenticated broker has already proposed on."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Job Details",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/jobs/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "jobs",
+                                "1"
+                            ]
+                        },
+                        "description": "Get details of an individual job."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Job (Buyer)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"category_id\": 1,\n    \"title\": \"Need 3 Bedroom Apartment in Bole\",\n    \"description\": \"Must have backup generator and parking.\",\n    \"location\": \"Bole Rwanda\",\n    \"location_region\": \"Addis Ababa\",\n    \"location_subcity\": \"Bole\",\n    \"budget_min_santim\": 5000000,\n    \"budget_max_santim\": 8000000,\n    \"attributes\": {\n        \"bedrooms\": 3,\n        \"furnished\": true\n    }\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/jobs",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "jobs"
+                            ]
+                        },
+                        "description": "Create job requirement. Validates leaf category, category JSON schema attributes, and enforces guest 2-active-job cap."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "06. Proposals & Chat Negotiation (Module 6)",
+            "item": [
+                {
+                    "name": "Submit Proposal (Verified Delala)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"cover_letter\": \"I have verified 2 properties matching your description.\",\n    \"items\": [\n        {\n            \"item_name\": \"Apartment Option A\",\n            \"description\": \"Furnished, 3rd floor, generator available\",\n            \"commission_amount_santim\": 50000\n        }\n    ]\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/jobs/1/proposals",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "jobs",
+                                "1",
+                                "proposals"
+                            ]
+                        },
+                        "description": "Requires approved KYC. Enforces 10,000 Santim floor and max 1 active proposal per job."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Mutate Commission in Chat (Delala)",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"commission_amount_santim\": 45000\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/proposals/1/items/1/commission",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "proposals",
+                                "1",
+                                "items",
+                                "1",
+                                "commission"
+                            ]
+                        },
+                        "description": "Adjust item commission fee during negotiation. Emits CommissionUpdated event and creates audit history."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Withdraw Proposal (Delala)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/proposals/1/withdraw",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "proposals",
+                                "1",
+                                "withdraw"
+                            ]
+                        },
+                        "description": "Allows delala to withdraw proposal while in pending status."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Reject Proposal (Buyer)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/proposals/1/reject",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "proposals",
+                                "1",
+                                "reject"
+                            ]
+                        },
+                        "description": "Buyer rejects proposal, transitioning status to rejected and closing chat as read-only."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Initiate / Access Chat (Buyer-First Gate)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/proposals/1/chat",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "proposals",
+                                "1",
+                                "chat"
+                            ]
+                        },
+                        "description": "Buyer initiates chat first. Delala receives 403 if calling before buyer initiates. Contact info redacted until contracted."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Send Chat Message (Anti-Circumvention Protection)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"type\": \"text\",\n    \"body\": \"When can we schedule the property inspection?\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/chats/1/messages",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "chats",
+                                "1",
+                                "messages"
+                            ]
+                        },
+                        "description": "Blocks off-platform contact sharing (phone, telegram, email) before escrow funding. Increments strike count on breach."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "07. Escrow & Double-Entry Ledger (Module 7)",
+            "item": [
+                {
+                    "name": "Accept Proposal Item (Initiate Escrow)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/proposals/1/items/1/accept",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "proposals",
+                                "1",
+                                "items",
+                                "1",
+                                "accept"
+                            ]
+                        },
+                        "description": "Buyer accepts item. Generates Chapa checkout URL and creates pending escrow record."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Declare Handover Complete (Broker)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/escrow/1/handover",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "escrow",
+                                "1",
+                                "handover"
+                            ]
+                        },
+                        "description": "Broker declares deal completed offline. Initiates 120-hour auto-release countdown."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Release Funds (Buyer)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/escrow/1/release",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "escrow",
+                                "1",
+                                "release"
+                            ]
+                        },
+                        "description": "Buyer accepts handover. Releases funds to Delala Available wallet and writes JNL-2 ledger entries."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Request Pre-Handover Cancellation (Buyer)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"reason\": \"Buyer requested pre-handover cancellation.\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/escrow/1/cancel-request",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "escrow",
+                                "1",
+                                "cancel-request"
+                            ]
+                        },
+                        "description": "Starts 48-hour response window for Delala."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Approve Cancellation (Delala Refund)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/escrow/1/cancel-approve",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "escrow",
+                                "1",
+                                "cancel-approve"
+                            ]
+                        },
+                        "description": "Delala approves cancellation. Issues Chapa refund, writes JNL-3 reversal, and cancels job."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Reject Cancellation (Delala)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"rejection_reason\": \"Already paid inspection fee and organized viewings.\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/escrow/1/cancel-reject",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "escrow",
+                                "1",
+                                "cancel-reject"
+                            ]
+                        },
+                        "description": "Delala rejects cancellation. Transitions escrow to Disputed."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Dispute Handover (Buyer)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"reason\": \"Seller never showed up.\",\n    \"reason_code\": \"SELLER_NO_SHOW\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/escrow/1/dispute",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "escrow",
+                                "1",
+                                "dispute"
+                            ]
+                        },
+                        "description": "Buyer disputes during handover period. Requires standardized reason code."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Upload Dispute Evidence (Delala Third-Party Transfer)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"evidence_keys\": [\n        \"evidence/bank_transfer_to_seller.pdf\"\n    ],\n    \"notes\": \"Proof of bank transfer from Buyer to Landlord.\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/escrow/1/dispute-evidence",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "escrow",
+                                "1",
+                                "dispute-evidence"
+                            ]
+                        },
+                        "description": "Uploads 1..5 S3 keys showing transaction proof between Buyer and Third-Party Seller."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "08. Payouts & Maker-Checker Governance (Module 8)",
+            "item": [
+                {
+                    "name": "View Available Balance & Payout History (Delala)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/payouts",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "payouts"
+                            ]
+                        },
+                        "description": "Returns real-time balance computed from double-entry ledger and paginated payout requests."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Request Withdrawal (Delala)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"amount_santim\": 100000\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/payouts/request",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "payouts",
+                                "request"
+                            ]
+                        },
+                        "description": "Min 500 ETB. Immediately executes JNL-4A debiting available balance to clearing account."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Admin Force Release (Maker-Checker Threshold)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"justification_note\": \"Broker provided verified bill of sale.\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/escrow/1/force-release",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "escrow",
+                                "1",
+                                "force-release"
+                            ]
+                        },
+                        "description": "Executes immediately if <= 10,000 ETB. Returns 202 Queued if > 10,000 ETB."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Admin Force Refund (Maker-Checker Threshold)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"justification_note\": \"Seller confirmed deal fell through.\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/escrow/1/force-refund",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "escrow",
+                                "1",
+                                "force-refund"
+                            ]
+                        },
+                        "description": "Executes immediately if <= 10,000 ETB. Returns 202 Queued if > 10,000 ETB."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "List Maker-Checker Approvals Queue (Admin)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/approvals?status=PENDING",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "approvals"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "PENDING"
+                                }
+                            ]
+                        },
+                        "description": "List queued high-value actions requiring secondary Senior Admin approval."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Approve Maker-Checker Request (Senior Admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{seniorAdminToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/approvals/1/approve",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "approvals",
+                                "1",
+                                "approve"
+                            ]
+                        },
+                        "description": "Enforces maker != checker segregation. Executes action and updates ledger."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Export Payouts CSV Batch (Admin)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "text/csv"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/payouts/export-csv",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "payouts",
+                                "export-csv"
+                            ]
+                        },
+                        "description": "Exports bank-compatible CSV batch file of pending payouts."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Settle Payout with Bank Reference (Admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"bank_reference\": \"FT261022998877\",\n    \"admin_note\": \"Settled via online CBE bulk upload\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/payouts/1/settle",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "payouts",
+                                "1",
+                                "settle"
+                            ]
+                        },
+                        "description": "Marks payout Paid and writes JNL-4B ledger entry."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Suspend User Kill-Switch (Admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"reason\": \"Circumvention violation detected.\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/users/1/suspend",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "users",
+                                "1",
+                                "suspend"
+                            ]
+                        },
+                        "description": "Revokes all active API tokens, suspends user status, and withdraws pending proposals."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "09. Ratings & Public Trust Profiles (Module 9)",
+            "item": [
+                {
+                    "name": "Submit Rating (Double-Blind Protocol)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"stars\": 5,\n    \"review\": \"Excellent and transparent communication throughout the process.\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/jobs/1/ratings",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "jobs",
+                                "1",
+                                "ratings"
+                            ]
+                        },
+                        "description": "14-day window post completion. Hidden until both parties submit or 14 days elapse."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Delala Public Trust Profile",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/delalas/1/profile",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "delalas",
+                                "1",
+                                "profile"
+                            ]
+                        },
+                        "description": "Public profile showing verified badge, completed deals, and revealed reviews."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "10. Device Tokens & Multi-Channel Alerts (Module 10)",
+            "item": [
+                {
+                    "name": "Register Device FCM Push Token",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"fcm_token\": \"fcm_device_registration_token_here\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/users/fcm-token",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "users",
+                                "fcm-token"
+                            ]
+                        },
+                        "description": "Registers or refreshes the mobile client FCM device token."
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://127.0.0.1:8000/api/v1",
+            "type": "string"
+        },
+        {
+            "key": "token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "guest_token",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}

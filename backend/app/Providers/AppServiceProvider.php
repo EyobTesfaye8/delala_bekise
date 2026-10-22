@@ -2,11 +2,11 @@
 
 namespace App\Providers;
 
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Auth\Notifications\ResetPassword;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,9 +24,14 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         RateLimiter::for('send_otp', function (Request $request) {
+            if (app()->environment('testing')) {
+                return Limit::none();
+            }
+
             return [
                 Limit::perHour(10)->by($request->ip()),
                 Limit::perHour(3)->by($request->input('phone')),
+                Limit::perMinute(1)->by($request->input('phone')), // 60-second cooldown per NFR-SEC-1
             ];
         });
 

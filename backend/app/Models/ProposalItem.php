@@ -4,17 +4,20 @@ namespace App\Models;
 
 use App\States\ProposalItem\ProposalItemState;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Str;
 use Spatie\ModelStates\HasStates;
 
 #[Fillable([
+    'uuid',
     'proposal_id',
     'item_name',
     'description',
     'text_location',
+    'estimated_item_price_santim',
     'image_s3_keys',
     'commission_amount_santim',
     'status',
@@ -22,7 +25,16 @@ use Spatie\ModelStates\HasStates;
 ])]
 class ProposalItem extends Model
 {
-    use HasStates, HasFactory;
+    use HasFactory, HasStates;
+
+    protected static function booted(): void
+    {
+        static::creating(function (ProposalItem $item) {
+            if (empty($item->uuid)) {
+                $item->uuid = (string) Str::uuid();
+            }
+        });
+    }
 
     /**
      * @return array<string, string>

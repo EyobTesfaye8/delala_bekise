@@ -25,9 +25,13 @@ use Spatie\ModelStates\HasStates;
     'chapa_paid_at',
     'handover_declared_at',
     'auto_release_at',
+    'handover_warning_sent_at',
     'cancellation_requested_at',
     'cancellation_deadline_at',
     'dispute_evidence_s3_key',
+    'dispute_evidence_s3_keys',
+    'dispute_reason_code',
+    'overpayment_tx_ref',
     'admin_resolution_note',
     'resolved_by',
     'resolved_at',
@@ -50,10 +54,12 @@ class EscrowTransaction extends Model
             'chapa_paid_at' => 'datetime',
             'handover_declared_at' => 'datetime',
             'auto_release_at' => 'datetime',
+            'handover_warning_sent_at' => 'datetime',
             'cancellation_requested_at' => 'datetime',
             'cancellation_deadline_at' => 'datetime',
             'resolved_at' => 'datetime',
             'chapa_webhook_payload' => 'array',
+            'dispute_evidence_s3_keys' => 'array',
         ];
     }
 

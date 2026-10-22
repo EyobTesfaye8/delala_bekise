@@ -4,20 +4,25 @@ namespace App\Models;
 
 use App\States\Job\JobState;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Str;
 use Spatie\ModelStates\HasStates;
 
 #[Fillable([
+    'uuid',
     'buyer_id',
     'category_id',
     'title',
     'description',
     'status',
     'location',
+    'location_region',
+    'location_subcity',
+    'canceled_reason',
     'budget_min',
     'budget_max',
     'attributes',
@@ -25,7 +30,16 @@ use Spatie\ModelStates\HasStates;
 ])]
 class DelalaJob extends Model
 {
-    use HasStates, SoftDeletes, HasFactory;
+    use HasFactory, HasStates, SoftDeletes;
+
+    protected static function booted(): void
+    {
+        static::creating(function (DelalaJob $job) {
+            if (empty($job->uuid)) {
+                $job->uuid = (string) Str::uuid();
+            }
+        });
+    }
 
     /**
      * @return array<string, string>
@@ -54,6 +68,11 @@ class DelalaJob extends Model
     public function proposals(): HasMany
     {
         return $this->hasMany(Proposal::class, 'job_id');
+    }
+
+    public function escrows(): HasMany
+    {
+        return $this->hasMany(EscrowTransaction::class, 'job_id');
     }
 
     public function activeEscrow()

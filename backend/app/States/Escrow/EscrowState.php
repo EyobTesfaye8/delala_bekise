@@ -22,7 +22,8 @@ abstract class EscrowState extends State
             ->allowTransition(Funded::class, RefundFailed::class)
 
             ->allowTransition(CancellationRequested::class, ForceRefunded::class) // auto-refund or accepted by delala
-            ->allowTransition(CancellationRequested::class, Funded::class) // rejected by delala
+            ->allowTransition(CancellationRequested::class, Disputed::class) // rejected by delala
+            ->allowTransition(CancellationRequested::class, Funded::class) // rejected or resumed
             ->allowTransition(CancellationRequested::class, RefundFailed::class)
 
             ->allowTransition(HandoverDeclared::class, Disputed::class)

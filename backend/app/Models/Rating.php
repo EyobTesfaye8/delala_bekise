@@ -10,8 +10,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'escrow_transaction_id',
     'buyer_id',
     'delala_id',
+    'rater_id',
+    'ratee_id',
     'stars',
     'review',
+    'is_revealed',
+    'revealed_at',
 ])]
 class Rating extends Model
 {
@@ -22,6 +26,8 @@ class Rating extends Model
     {
         return [
             'stars' => 'integer',
+            'is_revealed' => 'boolean',
+            'revealed_at' => 'datetime',
         ];
     }
 
@@ -38,5 +44,15 @@ class Rating extends Model
     public function delala(): BelongsTo
     {
         return $this->belongsTo(User::class, 'delala_id');
+    }
+
+    public function rater(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'rater_id');
+    }
+
+    public function ratee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'ratee_id');
     }
 }

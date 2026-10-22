@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\CommissionUpdated;
 use App\Http\Controllers\Controller;
 use App\Models\DelalaJob;
 use App\Models\Proposal;
+use App\Models\ProposalItem;
+use App\Models\ProposalItemPriceHistory;
 use App\Notifications\NewProposalNotification;
 use App\Services\EscrowService;
 use App\States\Proposal\Rejected;
 use App\States\Proposal\Withdrawn;
-use App\States\ProposalItem\Pending;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +19,7 @@ use Illuminate\Support\Facades\DB;
 class ProposalController extends Controller
 {
     /**
-     * Submit a multi-item proposal (Delala only).
+     * Submit a multi-item proposal (Delala only) (FR-4.1 & FR-4.2).
      */
     public function store(Request $request, DelalaJob $job): JsonResponse
     {
@@ -29,19 +31,33 @@ class ProposalController extends Controller
         }
 
         // Job must be accepting proposals
-        if (! in_array($job->status->getValue(), ['open', 'negotiating'])) {
+        if (! in_array($job->status->getValue(), ['open', 'negotiating'], true)) {
             return response()->json(['message' => 'Job is not accepting proposals.'], 400);
         }
 
-        // Validate payload
+        // SRS §4.2 Constraint 1: A Delala may only have one active proposal per Job
+        $alreadyProposed = Proposal::where('job_id', $job->id)
+            ->where('delala_id', $user->id)
+            ->whereNotIn('status', ['withdrawn', 'rejected'])
+            ->exists();
+
+        if ($alreadyProposed) {
+            return response()->json([
+                'message' => 'You already have an active proposal on this job.',
+                'error_code' => 'DUPLICATE_PROPOSAL',
+            ], 422);
+        }
+
         $validated = $request->validate([
-            'cover_note' => 'nullable|string',
-            'items' => 'required|array|min:1',
-            'items.*.item_name' => 'required|string|max:255',
-            'items.*.description' => 'nullable|string',
-            'items.*.commission_amount_santim' => 'required|integer|min:5000', // min 50 ETB
-            'items.*.image_s3_keys' => 'nullable|array|max:5',
-            'items.*.image_s3_keys.*' => 'string',
+            'cover_note' => ['nullable', 'string', 'max:2000'],
+            'items' => ['required', 'array', 'min:1', 'max:10'], // 1..10 items per SRS FR-4.1
+            'items.*.item_name' => ['required', 'string', 'max:255'],
+            'items.*.description' => ['nullable', 'string'],
+            'items.*.text_location' => ['nullable', 'string', 'max:255'],
+            'items.*.estimated_item_price_santim' => ['nullable', 'integer', 'min:0'],
+            'items.*.commission_amount_santim' => ['required', 'integer', 'min:10000'], // min 100 ETB floor (FR-4.2)
+            'items.*.image_s3_keys' => ['nullable', 'array', 'max:5'],
+            'items.*.image_s3_keys.*' => ['string'],
         ]);
 
         $proposal = DB::transaction(function () use ($user, $job, $validated) {
@@ -55,9 +71,11 @@ class ProposalController extends Controller
                 $proposal->items()->create([
                     'item_name' => $itemData['item_name'],
                     'description' => $itemData['description'] ?? null,
+                    'text_location' => $itemData['text_location'] ?? null,
+                    'estimated_item_price_santim' => $itemData['estimated_item_price_santim'] ?? null,
                     'commission_amount_santim' => $itemData['commission_amount_santim'],
                     'image_s3_keys' => $itemData['image_s3_keys'] ?? null,
-                ]); // status is pending by default
+                ]);
             }
 
             $job->increment('proposal_count');
@@ -65,7 +83,7 @@ class ProposalController extends Controller
             return $proposal;
         });
 
-        // notify buyer "New proposal from [Delala]"
+        // Notify buyer
         $job->buyer->notify(new NewProposalNotification($proposal));
 
         return response()->json([
@@ -75,12 +93,20 @@ class ProposalController extends Controller
     }
 
     /**
-     * Withdraw a proposal (Delala only, if pending).
+     * Withdraw a proposal (Delala only, strictly if pending) (SRS §4.2 Constraint 2).
      */
     public function withdraw(Request $request, Proposal $proposal): JsonResponse
     {
         if ($request->user()->id !== $proposal->delala_id) {
             return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        // Delala can transition to WITHDRAWN ONLY while in PENDING state
+        if ($proposal->status->getValue() !== 'pending') {
+            return response()->json([
+                'message' => 'Proposals can only be withdrawn while in pending state before negotiation begins.',
+                'error_code' => 'CANNOT_WITHDRAW_NEGOTIATING_PROPOSAL',
+            ], 422);
         }
 
         if (! $proposal->status->canTransitionTo(Withdrawn::class)) {
@@ -115,8 +141,55 @@ class ProposalController extends Controller
     }
 
     /**
+     * In-Chat Commission Mutation (SRS FR-4.4).
+     */
+    public function updateCommission(Request $request, Proposal $proposal, ProposalItem $item): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user->id !== $proposal->delala_id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        if ($item->proposal_id !== $proposal->id) {
+            return response()->json(['message' => 'Item does not belong to this proposal.'], 404);
+        }
+
+        if ($item->status->getValue() !== 'pending') {
+            return response()->json(['message' => 'Can only mutate commission for pending items.'], 422);
+        }
+
+        $validated = $request->validate([
+            'commission_amount_santim' => ['required', 'integer', 'min:10000'],
+        ]);
+
+        $oldAmount = $item->commission_amount_santim;
+        $newAmount = $validated['commission_amount_santim'];
+
+        DB::transaction(function () use ($item, $oldAmount, $newAmount, $user) {
+            $item->update(['commission_amount_santim' => $newAmount]);
+
+            ProposalItemPriceHistory::create([
+                'proposal_item_id' => $item->id,
+                'old_amount_santim' => $oldAmount,
+                'new_amount_santim' => $newAmount,
+                'changed_by_id' => $user->id,
+            ]);
+        });
+
+        // Broadcast event into chat stream
+        broadcast(new CommissionUpdated($item->fresh(), $oldAmount, $newAmount))->toOthers();
+
+        return response()->json([
+            'message' => 'Commission updated successfully',
+            'item' => $item->fresh(),
+            'old_amount_santim' => $oldAmount,
+            'new_amount_santim' => $newAmount,
+        ]);
+    }
+
+    /**
      * Accept a single item in a proposal (Buyer only).
-     * Transitions Escrow to PendingPayment and returns Checkout URL.
      */
     public function acceptItem(Request $request, Proposal $proposal, $itemId, EscrowService $escrowService): JsonResponse
     {

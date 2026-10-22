@@ -17,11 +17,12 @@ class AuthService
     {
         $phone = preg_replace('/[^\d+]/', '', $phone);
         if (str_starts_with($phone, '09') || str_starts_with($phone, '07')) {
-            return '+251' . substr($phone, 1);
+            return '+251'.substr($phone, 1);
         }
         if (str_starts_with($phone, '251')) {
-            return '+' . $phone;
+            return '+'.$phone;
         }
+
         return $phone;
     }
 
@@ -51,7 +52,6 @@ class AuthService
 
         // Dispatch a job to send the SMS via the SMS Gateway
         dispatch(new SendSmsOtpJob($phone, $code));
-        // dispatch(new SendSmsOtpJob($phone, $code));
 
         return $otp;
     }
@@ -97,11 +97,11 @@ class AuthService
                 // Existing user logging in via OTP
                 if (! $user->phone_verified_at) {
                     $user->phone_verified_at = now();
-                    
+
                     if ($user->hasVerifiedEmail() && $user->status === 'unverified') {
                         $user->status = 'active';
                     }
-                    
+
                     $user->save();
                 }
             }

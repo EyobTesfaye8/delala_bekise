@@ -3,10 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 #[Fillable([
     'parent_id',
@@ -14,12 +14,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
     'slug',
     'description',
     'attributes_schema',
+    'json_schema',
     'is_active',
+    'is_leaf',
     'sort_order',
 ])]
 class Category extends Model
 {
     use HasFactory;
+
     /**
      * @return array<string, string>
      */
@@ -27,7 +30,9 @@ class Category extends Model
     {
         return [
             'attributes_schema' => 'array',
+            'json_schema' => 'array',
             'is_active' => 'boolean',
+            'is_leaf' => 'boolean',
             'sort_order' => 'integer',
         ];
     }

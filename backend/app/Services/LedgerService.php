@@ -94,7 +94,82 @@ class LedgerService
     }
 
     /**
-     * Flow D: Delala Withdrawal (PAID)
+     * Get real-time available balance for a Delala.
+     */
+    public function getDelalaAvailableBalance(int $delalaId): int
+    {
+        $account = LedgerAccount::where('code', 'delala_available_wallet_'.$delalaId)->first();
+        if (! $account) {
+            return 0;
+        }
+
+        $credits = (int) LedgerEntry::where('ledger_account_id', $account->id)->where('direction', 'credit')->sum('amount_santim');
+        $debits = (int) LedgerEntry::where('ledger_account_id', $account->id)->where('direction', 'debit')->sum('amount_santim');
+
+        return max(0, $credits - $debits);
+    }
+
+    /**
+     * Flow D (Part 1 - JNL-4A): Withdrawal Request Queued
+     * Immediately reserves funds by debiting available balance and crediting clearing account.
+     */
+    public function recordWithdrawalRequested(int $delalaId, int $amountSantim, string $payoutRef): void
+    {
+        DB::transaction(function () use ($delalaId, $amountSantim, $payoutRef) {
+            $payoutClearing = $this->getSystemAccount('payout_clearing_account', 'Payout Clearing Account', 'asset');
+
+            $delalaAvailable = LedgerAccount::firstOrCreate(
+                ['code' => 'delala_available_wallet_'.$delalaId, 'user_id' => $delalaId],
+                ['name' => 'Available Wallet - '.$delalaId, 'type' => 'liability']
+            );
+
+            $txRef = 'WREQ_'.Str::random(10);
+
+            $this->createEntry($txRef, $delalaAvailable, 'debit', $amountSantim, 'Withdrawal Requested - '.$payoutRef);
+            $this->createEntry($txRef, $payoutClearing, 'credit', $amountSantim, 'Withdrawal Requested - '.$payoutRef);
+        });
+    }
+
+    /**
+     * Flow D (Part 2 - JNL-4B): Withdrawal Settled / Paid
+     * Clears payout clearing against system bank/chapa holding.
+     */
+    public function recordWithdrawalSettled(int $delalaId, int $amountSantim, string $payoutRef): void
+    {
+        DB::transaction(function () use ($amountSantim, $payoutRef) {
+            $systemChapa = $this->getSystemAccount('system_chapa_holding', 'System Chapa Holding', 'asset');
+            $payoutClearing = $this->getSystemAccount('payout_clearing_account', 'Payout Clearing Account', 'asset');
+
+            $txRef = 'WSET_'.Str::random(10);
+
+            $this->createEntry($txRef, $payoutClearing, 'debit', $amountSantim, 'Withdrawal Settled - '.$payoutRef);
+            $this->createEntry($txRef, $systemChapa, 'credit', $amountSantim, 'Withdrawal Settled - '.$payoutRef);
+        });
+    }
+
+    /**
+     * Flow D (Reversal): Withdrawal Cancelled / Rejected
+     * Restores funds to delala available wallet.
+     */
+    public function recordWithdrawalCancelled(int $delalaId, int $amountSantim, string $payoutRef): void
+    {
+        DB::transaction(function () use ($delalaId, $amountSantim, $payoutRef) {
+            $payoutClearing = $this->getSystemAccount('payout_clearing_account', 'Payout Clearing Account', 'asset');
+
+            $delalaAvailable = LedgerAccount::firstOrCreate(
+                ['code' => 'delala_available_wallet_'.$delalaId, 'user_id' => $delalaId],
+                ['name' => 'Available Wallet - '.$delalaId, 'type' => 'liability']
+            );
+
+            $txRef = 'WREV_'.Str::random(10);
+
+            $this->createEntry($txRef, $payoutClearing, 'debit', $amountSantim, 'Withdrawal Cancelled Reversal - '.$payoutRef);
+            $this->createEntry($txRef, $delalaAvailable, 'credit', $amountSantim, 'Withdrawal Cancelled Reversal - '.$payoutRef);
+        });
+    }
+
+    /**
+     * Flow D: Delala Withdrawal (Instant single-step fallback)
      */
     public function recordWithdrawal(int $delalaId, int $amountSantim, string $payoutRef): void
     {
@@ -106,7 +181,6 @@ class LedgerService
                 ['name' => 'Available Wallet - '.$delalaId, 'type' => 'liability']
             );
 
-            // Need to verify balance in a real system, assume verified before this call
             $txRef = 'WDL_'.Str::random(10);
 
             $this->createEntry($txRef, $delalaAvailable, 'debit', $amountSantim, 'Withdrawal - '.$payoutRef);

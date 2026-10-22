@@ -12,6 +12,7 @@ use Spatie\ModelStates\HasStates;
     'user_id',
     'status',
     'id_document_s3_key',
+    'id_document_back_s3_key',
     'selfie_s3_key',
     'document_type',
     'rejection_reason',
