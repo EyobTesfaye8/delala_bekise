@@ -1543,6 +1543,44 @@
                     "response": []
                 },
                 {
+                    "name": "Reject Maker-Checker Request (Senior Admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{seniorAdminToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"rejection_reason\": \"Supporting documentation provided is unverified or insufficient.\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/approvals/1/reject",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "approvals",
+                                "1",
+                                "reject"
+                            ]
+                        },
+                        "description": "Enforces maker != checker segregation. Senior Admin rejects queued action with justification."
+                    },
+                    "response": []
+                },
+                {
                     "name": "Export Payouts CSV Batch (Admin)",
                     "request": {
                         "method": "GET",
@@ -1772,6 +1810,41 @@
         {
             "key": "guest_token",
             "value": "",
+            "type": "string"
+        },
+        {
+            "key": "seniorAdminToken",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "juniorAdminToken",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "demoPassword",
+            "value": "password123",
+            "type": "string"
+        },
+        {
+            "key": "seniorAdminEmail",
+            "value": "senior@delala.et",
+            "type": "string"
+        },
+        {
+            "key": "juniorAdminEmail",
+            "value": "junior@delala.et",
+            "type": "string"
+        },
+        {
+            "key": "verifiedDelalaEmail",
+            "value": "delala.verified@delala.et",
+            "type": "string"
+        },
+        {
+            "key": "buyerEmail",
+            "value": "buyer@delala.et",
             "type": "string"
         }
     ]

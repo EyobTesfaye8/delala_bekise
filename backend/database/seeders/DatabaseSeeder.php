@@ -17,13 +17,20 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             AdminUserSeeder::class,
+            TaxonomySeeder::class,
+            EnterpriseDemoSeeder::class,
         ]);
 
-        User::factory()->create([
-            'full_name' => 'Test User',
-            'email' => 'test@example.com',
-            'phone' => '+251911000001',
-            'type' => 'buyer',
-        ]);
+        User::firstOrCreate(
+            ['email' => 'test@example.com'],
+            [
+                'full_name' => 'Test User',
+                'phone' => '+251911000001',
+                'type' => 'buyer',
+                'status' => 'active',
+                'email_verified_at' => now(),
+                'phone_verified_at' => now(),
+            ]
+        );
     }
 }
