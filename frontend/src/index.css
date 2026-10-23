@@ -1,6 +1,55 @@
 @import "tailwindcss";
 
+:root {
+  --app-bg: #FAFAFA;
+  --app-card: #FFFFFF;
+  --app-card-subtle: #F8FAFC;
+  --app-text: #0F172A;
+  --app-text-muted: #64748B;
+  --app-border: #E2E8F0;
+  --app-primary: #059669;
+  --app-primary-hover: #047857;
+  --app-primary-light: #ECFDF5;
+  --app-accent: #D97706;
+  --app-accent-hover: #B45309;
+  --app-accent-light: #FFFBEB;
+  --app-danger: #E11D48;
+  --app-danger-light: #FFF1F2;
+}
+
+.dark {
+  --app-bg: #090D16;
+  --app-card: #111827;
+  --app-card-subtle: #162032;
+  --app-text: #F8FAFC;
+  --app-text-muted: #94A3B8;
+  --app-border: #1E293B;
+  --app-primary: #10B981;
+  --app-primary-hover: #059669;
+  --app-primary-light: rgba(16, 185, 129, 0.12);
+  --app-accent: #F59E0B;
+  --app-accent-hover: #D97706;
+  --app-accent-light: rgba(245, 158, 11, 0.12);
+  --app-danger: #F43F5E;
+  --app-danger-light: rgba(244, 63, 94, 0.12);
+}
+
 @theme {
+  --color-portal-bg: var(--app-bg);
+  --color-portal-card: var(--app-card);
+  --color-portal-card-subtle: var(--app-card-subtle);
+  --color-portal-text: var(--app-text);
+  --color-portal-muted: var(--app-text-muted);
+  --color-portal-border: var(--app-border);
+  --color-portal-primary: var(--app-primary);
+  --color-portal-primary-hover: var(--app-primary-hover);
+  --color-portal-primary-light: var(--app-primary-light);
+  --color-portal-accent: var(--app-accent);
+  --color-portal-accent-hover: var(--app-accent-hover);
+  --color-portal-accent-light: var(--app-accent-light);
+  --color-portal-danger: var(--app-danger);
+  --color-portal-danger-light: var(--app-danger-light);
+
   --color-surface: #faf8ff;
   --color-surface-dim: #d2d9f4;
   --color-surface-bright: #faf8ff;
@@ -61,8 +110,8 @@
     margin: 0;
     padding: 0;
     font-family: var(--font-body);
-    background-color: var(--color-surface);
-    color: var(--color-on-surface);
+    background-color: var(--app-bg);
+    color: var(--app-text);
   }
 }
 

@@ -10,6 +10,7 @@ import { SignUpDelalaPage } from './pages/auth/SignUpDelalaPage';
 import { VerifyEmailPage } from './pages/auth/VerifyEmailPage';
 import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
 import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
+import { BuyerPortal } from './pages/buyer/BuyerPortal';
 
 export function App() {
   return (
@@ -17,8 +18,13 @@ export function App() {
       <AuthProvider>
         <AuthFlowProvider>
           <Routes>
-            {/* Default redirect to Choose Role */}
-            <Route path="/" element={<Navigate to="/auth/choose-role" replace />} />
+            {/* Default entry goes directly to Buyer Portal */}
+            <Route path="/" element={<Navigate to="/buyer" replace />} />
+
+            {/* Buyer Portal (SPA Shell with Framer Motion AnimatePresence) */}
+            <Route path="/buyer" element={<BuyerPortal />} />
+            <Route path="/buyer/*" element={<BuyerPortal />} />
+            <Route path="/portal" element={<Navigate to="/buyer" replace />} />
 
             {/* Auth Routes */}
             <Route path="/auth/choose-role" element={<ChooseRolePage />} />
@@ -32,7 +38,7 @@ export function App() {
             <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
 
             {/* Catch-all redirect */}
-            <Route path="*" element={<Navigate to="/auth/choose-role" replace />} />
+            <Route path="*" element={<Navigate to="/buyer" replace />} />
           </Routes>
         </AuthFlowProvider>
       </AuthProvider>

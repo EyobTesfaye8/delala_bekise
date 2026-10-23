@@ -56,6 +56,13 @@ export const ChooseRolePage: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2">
+              <Link
+                to="/buyer"
+                className="px-3.5 py-1.5 rounded-lg bg-primary text-on-primary text-xs font-semibold hover:opacity-90 transition-opacity flex items-center gap-1.5 no-underline shadow-xs"
+              >
+                <span className="material-symbols-outlined text-[16px]">dashboard</span>
+                <span>Open Buyer Portal</span>
+              </Link>
               {isGuest && (
                 <button
                   onClick={() => setShowMigrateModal(true)}
