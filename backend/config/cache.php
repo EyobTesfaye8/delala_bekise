@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'default' => env('CACHE_STORE', 'database'),
+    'default' => env('CACHE_STORE') ?: (env('CACHE_DRIVER') ?: 'failover'),
 
     /*
     |--------------------------------------------------------------------------
@@ -100,6 +100,7 @@ return [
         'failover' => [
             'driver' => 'failover',
             'stores' => [
+                'redis',
                 'database',
                 'array',
             ],
@@ -131,6 +132,12 @@ return [
     |
     */
 
-    'serializable_classes' => false,
+    'serializable_classes' => is_string($serializableClasses = env('CACHE_SERIALIZABLE_CLASSES'))
+        ? (in_array(strtolower($serializableClasses), ['false', '0', ''], true)
+            ? false
+            : (in_array(strtolower($serializableClasses), ['true', '1'], true)
+                ? true
+                : array_values(array_filter(array_map('trim', explode(',', $serializableClasses))))))
+        : (bool) env('CACHE_SERIALIZABLE_CLASSES', false),
 
 ];

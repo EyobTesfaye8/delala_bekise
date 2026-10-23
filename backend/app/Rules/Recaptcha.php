@@ -17,7 +17,7 @@ class Recaptcha implements ValidationRule
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         // Skip reCAPTCHA validation in local/testing if desired, or just pass it through
-        if (app()->environment(['testing']) && $value === 'test_token') {
+        if (app()->environment(['local', 'testing']) && $value === 'test_token') {
             return;
         }
 
