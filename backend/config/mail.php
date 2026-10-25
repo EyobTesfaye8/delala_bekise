@@ -115,4 +115,16 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Delala Bekise')),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Development "To" Address
+    |--------------------------------------------------------------------------
+    |
+    | When running in local/development environments, route all outgoing mail
+    | to this address to comply with provider limitations (e.g. Resend free tier).
+    |
+    */
+
+    'dev_to' => env('DEV_MAIL_TO', 'honore8a@gmail.com'),
+
 ];

@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -39,5 +40,12 @@ class AppServiceProvider extends ServiceProvider
             // For now, redirect to backend on port 8000. Will be frontend URL later.
             return url("/api/v1/auth/reset-password?token={$token}&email={$notifiable->getEmailForPasswordReset()}");
         });
+
+        if ($this->app->environment('local', 'development', 'dev')) {
+            $devEmail = config('mail.dev_to', 'honore8a@gmail.com');
+            if (! empty($devEmail)) {
+                Mail::alwaysTo($devEmail);
+            }
+        }
     }
 }

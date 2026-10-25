@@ -103,6 +103,8 @@ class AuthService
                     }
 
                     $user->save();
+                } else {
+                    $user->touch();
                 }
             }
 

@@ -83,6 +83,37 @@ class User extends Authenticatable implements FilamentUser, HasName
         return $this->hasMany(DelalaJob::class, 'buyer_id');
     }
 
+    public function buyerEscrows(): HasMany
+    {
+        return $this->hasMany(EscrowTransaction::class, 'buyer_id');
+    }
+
+    public function chatMessages(): HasMany
+    {
+        return $this->hasMany(ChatMessage::class, 'sender_id');
+    }
+
+    /**
+     * Determine if the user has any ongoing deals.
+     * Ongoing deals include:
+     * - Active jobs not completed or canceled (e.g. open, negotiating, contracted, draft)
+     * - Active escrow transactions not in terminal states (released, force_released, force_refunded)
+     */
+    public function hasOngoingDeals(): bool
+    {
+        $hasOngoingJobs = $this->jobs()
+            ->whereNotIn('status', ['completed', 'canceled'])
+            ->exists();
+
+        if ($hasOngoingJobs) {
+            return true;
+        }
+
+        return $this->buyerEscrows()
+            ->whereNotIn('status', ['released', 'force_released', 'force_refunded'])
+            ->exists();
+    }
+
     public function proposals(): HasMany
     {
         return $this->hasMany(Proposal::class, 'delala_id');

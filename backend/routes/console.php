@@ -11,6 +11,9 @@ Artisan::command('inspire', function () {
 // SRS FR-1.6: Daily purge of unverified accounts > 72 hours with 0 jobs
 Schedule::command('delala:purge-unverified')->daily();
 
+// Garbage collection of guest accounts inactive for 5+ days with zero ongoing deals
+Schedule::command('delala:purge-inactive-guests')->daily();
+
 // SRS §10 & §11.1 Automated Schedulers
 Schedule::command('delala:auto-release-escrow')->hourly();
 Schedule::command('delala:handover-warning')->hourly();
