@@ -50,21 +50,21 @@ export const ActiveEscrowsPage: React.FC = () => {
 
         {/* State Preview Pill (Demo Control) */}
         <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[var(--app-card)] border border-[var(--app-border)] self-start sm:self-auto">
-          <span className="text-[10px] font-bold text-[var(--app-text-muted)] uppercase tracking-wider px-2">
-            Demo State:
+          <span className="text-xs font-medium text-[var(--app-text-muted)] px-2">
+            Demo state:
           </span>
           {(['FUNDED', 'HANDOVER_DECLARED', 'DISPUTED'] as EscrowState[]).map((st) => (
             <button
               key={st}
               onClick={() => setEscrowPreviewState(st)}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-0 ${
+              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer border-0 ${
                 activeEscrowPreviewState === st
                   ? 'bg-[var(--app-primary)] text-white shadow-xs'
                   : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] bg-transparent'
               }`}
             >
               {st === 'FUNDED' && '1. Funded'}
-              {st === 'HANDOVER_DECLARED' && '2. Handover Declared'}
+              {st === 'HANDOVER_DECLARED' && '2. Handover declared'}
               {st === 'DISPUTED' && '3. Disputed'}
             </button>
           ))}
@@ -86,23 +86,23 @@ export const ActiveEscrowsPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[var(--app-border)]">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded text-[11px] font-semibold bg-[var(--app-primary-light)] text-[var(--app-primary)] uppercase tracking-wider">
+                <span className="px-2.5 py-0.5 rounded text-xs font-medium bg-[var(--app-primary-light)] text-[var(--app-primary)]">
                   {mainDeal.category_name}
                 </span>
-                <span className="text-xs text-[var(--app-text-muted)]">• Escrow ID #{mainDeal.id}</span>
+                <span className="text-xs text-[var(--app-text-muted)]">Escrow ID #{mainDeal.id}</span>
               </div>
               <h2 className="text-lg sm:text-xl font-bold text-[var(--app-text)]">
                 {mainDeal.item_name}
               </h2>
               <p className="text-xs text-[var(--app-text-muted)]">
-                Associated Request: <strong className="text-[var(--app-text)]">{mainDeal.job_title}</strong>
+                Associated request: <strong className="text-[var(--app-text)]">{mainDeal.job_title}</strong>
               </p>
             </div>
 
             {/* Locked Commission Badge */}
             <div className="p-4 rounded-xl bg-[var(--app-card-subtle)] border border-[var(--app-border)] text-left sm:text-right shrink-0">
-              <span className="text-[10px] text-[var(--app-text-muted)] uppercase tracking-wider font-semibold block">
-                Escrow Commission Held
+              <span className="text-xs font-medium text-[var(--app-text-muted)] block">
+                Escrow commission held
               </span>
               <span className="font-financial-numeric text-xl font-extrabold text-[var(--app-primary)] block">
                 {mainDeal.commission_amount_etb.toLocaleString()} ETB
@@ -186,9 +186,9 @@ export const ActiveEscrowsPage: React.FC = () => {
             <div className="space-y-6 animate-in fade-in duration-200">
               {/* Live 120-Hour Auto-Release Countdown Banner */}
               <div className="p-5 rounded-xl bg-[var(--app-primary-light)] border border-[var(--app-primary)]/40 text-center space-y-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[var(--app-primary)] text-white text-[10px] font-bold uppercase tracking-wider">
+                <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[var(--app-primary)] text-white text-xs font-medium">
                   <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
-                  <span>Handover Declared by Broker • 120-Hour Window</span>
+                  <span>Handover declared by broker, 120-hour window</span>
                 </span>
 
                 <h3 className="text-sm font-bold text-[var(--app-text)]">
@@ -234,8 +234,8 @@ export const ActiveEscrowsPage: React.FC = () => {
               <div className="p-4 rounded-xl bg-[var(--app-danger-light)] border border-[var(--app-danger)]/40 text-[var(--app-danger)] space-y-2">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-[20px]">gavel</span>
-                  <span className="text-xs font-bold uppercase tracking-wider">
-                    Escrow Frozen — Under Delala Platform Admin Review
+                  <span className="text-xs font-semibold">
+                    Escrow frozen, under platform admin review
                   </span>
                 </div>
                 <p className="text-xs leading-relaxed text-[var(--app-text)]">
@@ -245,8 +245,8 @@ export const ActiveEscrowsPage: React.FC = () => {
 
               {/* Status Indicator: Broker Proof of Work */}
               <div className="p-4 rounded-xl bg-[var(--app-card-subtle)] border border-[var(--app-border)] space-y-3">
-                <h4 className="text-xs font-bold text-[var(--app-text)] uppercase tracking-wider">
-                  Evidence Pipeline Status
+                <h4 className="text-xs font-semibold text-[var(--app-text)]">
+                  Evidence pipeline status
                 </h4>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-[var(--app-text-muted)]">Broker Transfer Receipt:</span>

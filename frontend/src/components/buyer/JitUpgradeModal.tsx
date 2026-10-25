@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { useBuyer } from '../../context/useBuyer';
+import React, { useState, useContext } from 'react';
+import { BuyerContext } from '../../context/buyerContextDef';
+import { useAuth } from '../../context/useAuth';
 
 interface JitUpgradeModalProps {
   isOpen: boolean;
@@ -7,7 +8,9 @@ interface JitUpgradeModalProps {
 }
 
 export const JitUpgradeModal: React.FC<JitUpgradeModalProps> = ({ isOpen, onClose }) => {
-  const { upgradeGuestAccount } = useBuyer();
+  const buyerContext = useContext(BuyerContext);
+  const { user, migrateGuest } = useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
@@ -16,7 +19,7 @@ export const JitUpgradeModal: React.FC<JitUpgradeModalProps> = ({ isOpen, onClos
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== passwordConfirm) {
       setError('Passwords do not match');
@@ -28,11 +31,28 @@ export const JitUpgradeModal: React.FC<JitUpgradeModalProps> = ({ isOpen, onClos
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      upgradeGuestAccount(email);
+    setError(null);
+
+    try {
+      if (user?.type === 'guest') {
+        await migrateGuest({
+          full_name: user?.full_name || 'Registered Buyer',
+          email: email.trim(),
+          password,
+          password_confirmation: passwordConfirm,
+        });
+      }
+
+      if (buyerContext) {
+        buyerContext.upgradeGuestAccount(email);
+      }
+
       setIsSubmitting(false);
       onClose();
-    }, 600);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Upgrade failed. Please check credentials.');
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -61,8 +81,8 @@ export const JitUpgradeModal: React.FC<JitUpgradeModalProps> = ({ isOpen, onClos
           <div className="flex items-center gap-2.5">
             <span className="material-symbols-outlined text-[18px] text-[var(--app-primary)]">verified</span>
             <div>
-              <p className="text-[11px] text-[var(--app-text-muted)] uppercase tracking-wider font-semibold">Pre-Verified Phone</p>
-              <p className="font-financial-numeric text-sm font-semibold text-[var(--app-text)]">+251 911 44 89 20</p>
+              <p className="text-xs font-medium text-[var(--app-text-muted)]">Pre-verified phone</p>
+              <p className="font-financial-numeric text-sm font-semibold text-[var(--app-text)]">{user?.phone || '+251 911 44 89 20'}</p>
             </div>
           </div>
           <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[var(--app-primary-light)] text-[var(--app-primary)]">
@@ -136,12 +156,12 @@ export const JitUpgradeModal: React.FC<JitUpgradeModalProps> = ({ isOpen, onClos
               {isSubmitting ? (
                 <>
                   <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                  <span>Saving...</span>
+                  <span>Upgrading account...</span>
                 </>
               ) : (
                 <>
                   <span className="material-symbols-outlined text-[16px]">check</span>
-                  <span>Complete JIT Upgrade</span>
+                  <span>Upgrade account</span>
                 </>
               )}
             </button>

@@ -81,7 +81,7 @@ export const SignUpBuyerPage: React.FC = () => {
         email,
         role: 'buyer',
       });
-      navigate('/auth/verify-email');
+      navigate('/auth/verify-otp');
     } catch (err) {
       if (err instanceof ApiError) {
         setErrorMessage(err.message);
@@ -120,11 +120,10 @@ export const SignUpBuyerPage: React.FC = () => {
 
           <header className="mb-8">
             <div className="flex items-center gap-2 mb-3">
-              <span className="px-2 py-0.5 rounded bg-primary-fixed text-on-primary-fixed-variant text-xs uppercase tracking-wider font-semibold">
-                Institutional Escrow
+              <span className="px-2 py-0.5 rounded bg-primary-fixed text-on-primary-fixed-variant text-xs font-medium">
+                Institutional escrow
               </span>
-              <span className="text-on-surface-variant/40 text-xs">•</span>
-              <span className="text-xs text-on-surface-variant">Buyer Portal</span>
+              <span className="text-xs text-on-surface-variant">Buyer portal</span>
             </div>
             <h1 className="font-headline text-2xl md:text-3xl text-on-surface font-bold tracking-tight">
               Create Buyer Account
@@ -372,7 +371,7 @@ export const SignUpBuyerPage: React.FC = () => {
           <p className="text-sm text-on-surface-variant">
             Already have an account?{' '}
             <Link to="/auth/login" className="text-primary font-semibold hover:underline ml-1">
-              Sign in
+              Log in
             </Link>
           </p>
         </div>

@@ -73,7 +73,7 @@ export const SignUpDelalaPage: React.FC = () => {
         email,
         role: 'delala',
       });
-      navigate('/auth/verify-email');
+      navigate('/auth/verify-otp');
     } catch (err) {
       if (err instanceof ApiError) {
         setErrorMessage(err.message);
@@ -298,12 +298,12 @@ export const SignUpDelalaPage: React.FC = () => {
             </form>
 
             <div className="mt-8 pt-6 border-t-0 bg-surface-container-low/50 -mx-8 -mb-8 sm:-mx-10 sm:-mb-10 p-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left text-sm text-on-surface-variant">
-              <p>Already have a broker account?</p>
+              <p>Already have an account?</p>
               <Link
                 to="/auth/login"
                 className="inline-flex items-center gap-1 font-semibold text-primary hover:text-primary-container transition-colors"
               >
-                <span>Sign in</span>
+                <span>Log in</span>
                 <span className="material-symbols-outlined text-[16px]">login</span>
               </Link>
             </div>

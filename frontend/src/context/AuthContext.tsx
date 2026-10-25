@@ -12,6 +12,20 @@ import { AuthContext } from './authContextDef';
 import { authService } from '../services/authService';
 import { tokenStorage } from '../services/apiClient';
 
+const applyUserOverrides = (baseUser: User | null): User | null => {
+  if (!baseUser) return null;
+  try {
+    const raw = localStorage.getItem('delala_user_overrides');
+    if (raw) {
+      const overrides = JSON.parse(raw);
+      return { ...baseUser, ...overrides };
+    }
+  } catch {
+    // ignore
+  }
+  return baseUser;
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(tokenStorage.get());
@@ -27,7 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       const currentUser = await authService.getCurrentUser();
-      setUser(currentUser);
+      setUser(applyUserOverrides(currentUser));
     } catch {
       tokenStorage.clear();
       setToken(null);
@@ -47,7 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       try {
         const currentUser = await authService.getCurrentUser();
-        if (mounted) setUser(currentUser);
+        if (mounted) setUser(applyUserOverrides(currentUser));
       } catch {
         if (mounted) {
           tokenStorage.clear();
@@ -71,7 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(res.token);
     }
     if (res.user) {
-      setUser(res.user);
+      setUser(applyUserOverrides(res.user));
     }
     return res;
   };
@@ -82,7 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(res.token);
     }
     if (res.user) {
-      setUser(res.user);
+      setUser(applyUserOverrides(res.user));
     }
     return res;
   };
@@ -97,7 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(res.token);
     }
     if (res.user) {
-      setUser(res.user);
+      setUser(applyUserOverrides(res.user));
     }
     return res;
   };
@@ -105,7 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const migrateGuest = async (payload: MigrateGuestRequest): Promise<void> => {
     const res = await authService.migrateGuest(payload);
     if (res.user) {
-      setUser(res.user);
+      setUser(applyUserOverrides(res.user));
     }
   };
 
@@ -113,6 +127,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await authService.logout();
     setToken(null);
     setUser(null);
+  };
+
+  const updateUser = (partial: Partial<User>): void => {
+    setUser((prev) => {
+      if (!prev) return null;
+      const updated = { ...prev, ...partial };
+      try {
+        const raw = localStorage.getItem('delala_user_overrides');
+        const overrides = raw ? JSON.parse(raw) : {};
+        localStorage.setItem('delala_user_overrides', JSON.stringify({ ...overrides, ...partial }));
+      } catch {
+        // ignore
+      }
+      return updated;
+    });
   };
 
   const isGuest = user?.type === 'guest';
@@ -137,6 +166,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         migrateGuest,
         logout,
         refreshUser,
+        updateUser,
       }}
     >
       {children}

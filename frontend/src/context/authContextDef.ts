@@ -24,6 +24,7 @@ export interface AuthContextType {
   migrateGuest: (payload: MigrateGuestRequest) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  updateUser: (partial: Partial<User>) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);

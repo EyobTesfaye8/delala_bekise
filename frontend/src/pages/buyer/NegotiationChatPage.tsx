@@ -86,11 +86,11 @@ export const NegotiationChatPage: React.FC = () => {
       {/* Left Pane: Conversation List */}
       <div className="w-80 border-r border-[var(--app-border)] flex flex-col shrink-0 bg-[var(--app-card)]">
         <div className="p-4 border-b border-[var(--app-border)] flex items-center justify-between">
-          <h2 className="text-xs font-bold text-[var(--app-text)] uppercase tracking-wider">
+          <h2 className="text-xs font-semibold text-[var(--app-text)]">
             Conversations
           </h2>
           <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[var(--app-primary-light)] text-[var(--app-primary)]">
-            {chatThreads.length} Active
+            {chatThreads.length} active
           </span>
         </div>
 
@@ -161,7 +161,7 @@ export const NegotiationChatPage: React.FC = () => {
                 <strong>✓ Escrow Funded:</strong> Contact info unlocked for offline meetup. Call Delala {activeThread.delala_name} at <strong className="font-financial-numeric">{activeThread.delala_phone}</strong>.
               </span>
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[var(--app-primary)] text-white">
+            <span className="text-xs font-medium px-2 py-0.5 rounded bg-[var(--app-primary)] text-white">
               Unlocked
             </span>
           </div>
@@ -176,10 +176,10 @@ export const NegotiationChatPage: React.FC = () => {
             <button
               type="button"
               onClick={testSimulateViolation}
-              className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border border-[var(--app-accent)] text-[var(--app-accent)] hover:bg-[var(--app-accent)] hover:text-white transition-colors cursor-pointer bg-transparent"
+              className="text-xs font-medium px-2 py-0.5 rounded border border-[var(--app-accent)] text-[var(--app-accent)] hover:bg-[var(--app-accent)] hover:text-white transition-colors cursor-pointer bg-transparent"
               title="Test the anti-circumvention rule detector"
             >
-              Simulate Violation
+              Simulate violation
             </button>
           </div>
         )}
@@ -225,9 +225,9 @@ export const NegotiationChatPage: React.FC = () => {
               return (
                 <div key={msg.id} className="w-full flex justify-center my-4 animate-in fade-in duration-150">
                   <div className="max-w-md w-full p-4 rounded-xl bg-[var(--app-card)] border border-[var(--app-primary)]/40 shadow-xs space-y-2.5 text-center">
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[var(--app-primary-light)] text-[var(--app-primary)] text-[10px] font-bold uppercase tracking-wider">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[var(--app-primary-light)] text-[var(--app-primary)] text-xs font-medium">
                       <span className="material-symbols-outlined text-[13px]">published_with_changes</span>
-                      <span>Marketplace Negotiation Event</span>
+                      <span>Marketplace negotiation event</span>
                     </div>
 
                     <p className="text-xs text-[var(--app-text)] font-medium leading-relaxed">

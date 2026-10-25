@@ -72,10 +72,10 @@ export const MyJobsPage: React.FC = () => {
             </button>
             <div>
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-[var(--app-primary-light)] text-[var(--app-primary)]">
+                <span className="px-2 py-0.5 rounded text-xs font-medium bg-[var(--app-primary-light)] text-[var(--app-primary)]">
                   {selectedJob.category_name}
                 </span>
-                <span className="text-xs text-[var(--app-text-muted)]">• {selectedJob.location}</span>
+                <span className="text-xs text-[var(--app-text-muted)]">{selectedJob.location}</span>
               </div>
               <h1 className="text-lg sm:text-xl font-bold tracking-tight text-[var(--app-text)] mt-0.5">
                 {selectedJob.title}
@@ -85,7 +85,7 @@ export const MyJobsPage: React.FC = () => {
 
           <div className="flex items-center gap-3">
             <div className="px-3.5 py-1.5 rounded-xl bg-[var(--app-card)] border border-[var(--app-border)] text-right">
-              <p className="text-[10px] text-[var(--app-text-muted)] uppercase tracking-wider font-medium">Budget Range</p>
+              <p className="text-xs text-[var(--app-text-muted)] font-medium">Budget range</p>
               <p className="font-financial-numeric text-xs font-bold text-[var(--app-text)]">
                 {selectedJob.budget_min_etb.toLocaleString()} – {selectedJob.budget_max_etb.toLocaleString()} ETB
               </p>
@@ -99,7 +99,7 @@ export const MyJobsPage: React.FC = () => {
             <div className="w-12 h-12 rounded-2xl bg-[var(--app-card-subtle)] text-[var(--app-text-muted)] flex items-center justify-center mx-auto mb-3">
               <span className="material-symbols-outlined text-[24px]">inbox</span>
             </div>
-            <h3 className="text-sm font-bold text-[var(--app-text)]">No Proposals Received Yet</h3>
+            <h3 className="text-sm font-bold text-[var(--app-text)]">No proposals received yet</h3>
             <p className="text-xs text-[var(--app-text-muted)] max-w-sm mx-auto mt-1">
               Verified local Delalas in {selectedJob.location_subcity || 'Addis Ababa'} have been notified of your requirement.
             </p>
@@ -107,8 +107,8 @@ export const MyJobsPage: React.FC = () => {
         ) : (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xs font-bold text-[var(--app-text-muted)] uppercase tracking-wider">
-                {currentProposals.length} Verified Broker Proposals
+              <h2 className="text-xs font-semibold text-[var(--app-text)]">
+                {currentProposals.length} verified broker proposals
               </h2>
               <span className="text-xs text-[var(--app-text-muted)]">
                 Select an item to inspect or fund escrow

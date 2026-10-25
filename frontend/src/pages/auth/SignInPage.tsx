@@ -47,9 +47,14 @@ export const SignInPage: React.FC = () => {
     setErrorMessage(null);
 
     try {
-      await login({ email, password });
-      updateFlowData({ email });
-      navigate('/auth/choose-role');
+      const res = await login({ email, password });
+      const userRole = res.user?.type === 'delala' ? 'delala' : res.user?.type === 'guest' ? 'guest' : 'buyer';
+      updateFlowData({ email, role: userRole });
+      if (res.user?.type === 'delala') {
+        navigate('/delala/feed');
+      } else {
+        navigate('/buyer');
+      }
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 423 && err.lockedUntil) {
@@ -225,8 +230,8 @@ export const SignInPage: React.FC = () => {
             {/* Divider */}
             <div className="relative flex items-center justify-center my-1">
               <div className="w-full h-px bg-surface-container"></div>
-              <span className="absolute px-3 bg-surface-container-lowest text-xs uppercase tracking-wider text-outline font-semibold">
-                or continue with
+              <span className="absolute px-3 bg-surface-container-lowest text-xs text-outline font-medium">
+                or log in with
               </span>
             </div>
 

@@ -164,14 +164,23 @@ export const GuestLoginPage: React.FC = () => {
               </div>
             </form>
 
-            <div className="mt-8 pt-6 flex flex-col items-center justify-center text-center">
+            <div className="mt-8 pt-6 border-t border-outline-variant/20 flex flex-col items-center justify-center text-center space-y-2">
               <p className="text-sm text-on-surface-variant">
+                Already have an account?{' '}
+                <Link
+                  to="/auth/login"
+                  className="font-semibold text-primary hover:underline transition-all"
+                >
+                  Log in
+                </Link>
+              </p>
+              <p className="text-xs text-on-surface-variant">
                 Want a permanent account instead?{' '}
                 <Link
                   to="/auth/register/buyer"
-                  className="inline-block mt-1 sm:mt-0 font-semibold text-primary hover:underline transition-all"
+                  className="font-semibold text-primary hover:underline transition-all"
                 >
-                  Switch to Buyer Registration
+                  Register as Buyer
                 </Link>
               </p>
             </div>

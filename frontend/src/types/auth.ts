@@ -12,6 +12,9 @@ export interface User {
   avatar_s3_key?: string | null;
   phone_verified_at?: string | null;
   email_verified_at?: string | null;
+  totp_enabled_at?: string | null;
+  fcm_token?: string | null;
+  bio?: string | null;
   circumvention_strike_count: number;
   login_attempt_count?: number;
   locked_until?: string | null;

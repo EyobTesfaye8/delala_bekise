@@ -24,8 +24,8 @@ export const SavedDelalasPage: React.FC = () => {
           </div>
 
           <div className="space-y-2">
-            <span className="px-3 py-1 rounded-full bg-[var(--app-card-subtle)] text-[var(--app-text-muted)] text-[11px] font-bold uppercase tracking-wider">
-              Guest Mode Restricted
+            <span className="px-3 py-1 rounded-full bg-[var(--app-card-subtle)] text-[var(--app-text-muted)] text-xs font-medium">
+              Guest mode restricted
             </span>
             <h2 className="text-xl font-bold tracking-tight text-[var(--app-text)]">
               Saved Delalas &amp; Historical Records Locked
@@ -41,7 +41,7 @@ export const SavedDelalasPage: React.FC = () => {
               className="px-6 py-2.5 rounded-xl bg-[var(--app-primary)] hover:bg-[var(--app-primary-hover)] text-white text-xs font-bold shadow-xs transition-all cursor-pointer border-0 inline-flex items-center gap-2"
             >
               <span className="material-symbols-outlined text-[16px]">upgrade</span>
-              <span>Upgrade Account to Unlock</span>
+              <span>Upgrade account to unlock</span>
             </button>
           </div>
         </div>
@@ -69,8 +69,8 @@ export const SavedDelalasPage: React.FC = () => {
       {/* Bookmarked Delalas Grid */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-bold text-[var(--app-text-muted)] uppercase tracking-wider">
-            Bookmarked Brokers ({bookmarkedDelalas.length})
+          <h2 className="text-xs font-semibold text-[var(--app-text)]">
+            Bookmarked brokers ({bookmarkedDelalas.length})
           </h2>
           <span className="text-xs text-[var(--app-text-muted)]">Verified Ethiopian FinTech Sandbox Licensed</span>
         </div>

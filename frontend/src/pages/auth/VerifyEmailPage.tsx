@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AuthLayout } from '../../components/auth/AuthLayout';
 import { useAuthFlow } from '../../context/useAuthFlow';
+import { useAuth } from '../../context/useAuth';
 
 export const VerifyEmailPage: React.FC = () => {
+  const navigate = useNavigate();
   const { flowData } = useAuthFlow();
-  const email = flowData.email || 'abebe.b@example.com';
-  const phone = flowData.phone;
+  const { user } = useAuth();
+  const email = flowData.email || user?.email || 'abebe.b@example.com';
+  const role = flowData.role || user?.type || 'buyer';
 
   const [secondsLeft, setSecondsLeft] = useState(60);
   const [isResent, setIsResent] = useState(false);
@@ -25,6 +28,14 @@ export const VerifyEmailPage: React.FC = () => {
     setSecondsLeft(60);
   };
 
+  const handleContinue = () => {
+    if (role === 'delala') {
+      navigate('/delala/feed');
+    } else {
+      navigate('/buyer');
+    }
+  };
+
   return (
     <AuthLayout>
       <div className="relative w-full min-h-[calc(100vh-8rem)] flex items-center justify-center px-4 py-8 overflow-hidden">
@@ -37,8 +48,8 @@ export const VerifyEmailPage: React.FC = () => {
           {/* Institutional Step Indicator pill */}
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container mb-6 shadow-xs">
             <span className="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse"></span>
-            <span className="text-xs uppercase tracking-wider text-on-surface-variant font-semibold">
-              Institutional Onboarding • Step 2 of 2
+            <span className="text-xs font-medium text-on-surface-variant">
+              Step 2 of 2: Email verification
             </span>
           </div>
 
@@ -69,29 +80,31 @@ export const VerifyEmailPage: React.FC = () => {
             </span>. Click the link in the message to activate your account.
           </p>
 
-          {/* Prompt if Phone OTP is also pending */}
-          {phone && (
-            <div className="w-full mb-6 p-4 rounded-xl bg-surface-container-low border border-outline-variant/30 text-left flex items-center justify-between">
-              <div>
-                <div className="text-xs font-bold text-on-surface">Phone SMS Verification</div>
-                <div className="text-xs text-on-surface-variant mt-0.5">
-                  Code sent to <span className="font-semibold">{phone}</span>
-                </div>
-              </div>
-              <Link
-                to="/auth/verify-otp"
-                className="px-3 py-1.5 rounded-lg bg-primary text-on-primary text-xs font-semibold hover:bg-primary-container transition no-underline"
-              >
-                Enter OTP
-              </Link>
+          {/* Development Bypass / Verification Success Simulator */}
+          <div className="w-full mb-6 p-4 rounded-xl bg-surface-container-low border border-outline-variant/30 text-left space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-on-surface">Email Verification Link</span>
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-primary-fixed text-on-primary-fixed-variant">
+                Development Preview
+              </span>
             </div>
-          )}
+            <p className="text-xs text-on-surface-variant leading-relaxed">
+              Once verified, {role === 'delala' ? 'Delalas are automatically redirected to the marketplace Feed Page' : 'Buyers are automatically redirected to the Posted Deals dashboard'}.
+            </p>
+            <button
+              onClick={handleContinue}
+              className="w-full py-2.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary text-xs font-bold transition shadow-xs cursor-pointer border-0 flex items-center justify-center gap-1.5"
+            >
+              <span>Verified • Continue to {role === 'delala' ? 'Delala Feed' : 'Posted Deals'}</span>
+              <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+            </button>
+          </div>
 
           {/* Primary & Secondary Interactive CTAs */}
           <div className="w-full flex flex-col gap-2 mb-6">
             <a
               href={`mailto:${email}`}
-              className="w-full h-12 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-semibold text-sm flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.99] group no-underline"
+              className="w-full h-12 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-semibold text-sm flex items-center justify-center gap-2 border border-outline-variant/30 transition-all active:scale-[0.99] group no-underline"
             >
               <span>Open Email Inbox</span>
               <span className="material-symbols-outlined text-[18px] group-hover:translate-x-0.5 transition-transform">
@@ -103,7 +116,7 @@ export const VerifyEmailPage: React.FC = () => {
               type="button"
               disabled={secondsLeft > 0}
               onClick={handleResend}
-              className="w-full h-11 rounded-lg bg-surface-container hover:bg-surface-container-high disabled:opacity-60 disabled:cursor-not-allowed text-xs font-semibold flex items-center justify-center gap-2 transition-colors text-primary cursor-pointer border-0"
+              className="w-full h-11 rounded-lg bg-transparent hover:bg-surface-container-low disabled:opacity-60 disabled:cursor-not-allowed text-xs font-semibold flex items-center justify-center gap-2 transition-colors text-primary cursor-pointer border-0"
             >
               <span className="material-symbols-outlined text-[18px]">sync</span>
               <span>

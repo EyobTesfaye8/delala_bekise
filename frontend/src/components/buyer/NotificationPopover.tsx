@@ -18,7 +18,7 @@ export const NotificationPopover: React.FC<NotificationPopoverProps> = ({ isOpen
         <div className="flex items-center justify-between pb-3 border-b border-[var(--app-border)] mb-3">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-[18px] text-[var(--app-primary)]">notifications</span>
-            <span className="text-xs font-bold uppercase tracking-wider">Platform Alerts</span>
+            <span className="text-xs font-semibold text-[var(--app-text)]">Platform alerts</span>
           </div>
           <button
             onClick={markNotificationsAsRead}

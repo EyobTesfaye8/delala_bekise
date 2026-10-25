@@ -88,9 +88,25 @@ export const VerifyOtpPage: React.FC = () => {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      await verifyOtp({ phone, code: codeToSubmit });
-      // Redirect to main app / feed
-      navigate('/auth/choose-role');
+      const authRes = await verifyOtp({ phone, code: codeToSubmit });
+
+      // Determine destination based on role
+      const role = flowData.role || authRes.user?.type;
+      const isDev = import.meta.env.DEV;
+
+      // In production mode, if user registered with email, proceed to verify email page
+      if (!isDev && (role === 'buyer' || role === 'delala')) {
+        navigate('/auth/verify-email');
+        return;
+      }
+
+      // In development mode (or for one-time buyers):
+      // Delalas redirect to Feed Page; both kinds of Buyers redirect to Posted Deals (/buyer)
+      if (role === 'delala') {
+        navigate('/delala/feed');
+      } else {
+        navigate('/buyer');
+      }
     } catch (err) {
       if (err instanceof ApiError) {
         setErrorMessage(err.message);
@@ -160,7 +176,7 @@ export const VerifyOtpPage: React.FC = () => {
               </div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-low text-primary">
                 <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-                <span className="text-xs uppercase tracking-wider font-semibold">2-Step Secure</span>
+                <span className="text-xs font-medium">SMS verification</span>
               </div>
             </div>
 

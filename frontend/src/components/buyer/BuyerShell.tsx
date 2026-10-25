@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBuyer } from '../../context/useBuyer';
 import { NotificationPopover } from './NotificationPopover';
@@ -193,9 +194,18 @@ export const BuyerShell: React.FC = () => {
 
           {/* User Profile Avatar */}
           <div className="flex items-center gap-2 pl-1 border-l border-[var(--app-border)]">
-            <div className="w-8 h-8 rounded-lg bg-[var(--app-primary-light)] text-[var(--app-primary)] font-bold text-xs flex items-center justify-center">
-              {isGuestMode ? 'GB' : 'SH'}
-            </div>
+            <Link
+              to="/profile"
+              className="flex items-center gap-2 p-1 rounded-xl hover:bg-[var(--app-card-subtle)] transition-colors no-underline text-inherit group"
+              title="View & Edit Profile"
+            >
+              <div className="w-8 h-8 rounded-lg bg-[var(--app-primary-light)] text-[var(--app-primary)] font-bold text-xs flex items-center justify-center border border-[var(--app-primary)]/20 group-hover:scale-105 transition-transform">
+                {isGuestMode ? 'GB' : 'SH'}
+              </div>
+              <span className="hidden lg:inline text-xs font-semibold text-[var(--app-text)] group-hover:text-[var(--app-primary)] transition-colors">
+                Profile
+              </span>
+            </Link>
           </div>
         </div>
       </header>

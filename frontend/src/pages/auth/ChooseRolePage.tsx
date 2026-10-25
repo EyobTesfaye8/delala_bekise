@@ -41,7 +41,7 @@ export const ChooseRolePage: React.FC = () => {
                   <span className="font-bold text-on-surface text-base">
                     {user.full_name || user.phone}
                   </span>
-                  <span className="px-2 py-0.5 rounded text-[11px] font-semibold uppercase tracking-wider bg-surface-container-high text-on-surface-variant">
+                  <span className="px-2 py-0.5 rounded text-xs font-medium bg-surface-container-high text-on-surface-variant capitalize">
                     {user.type}
                   </span>
                   <span className="inline-flex items-center gap-1 text-[11px] text-primary font-medium">
@@ -107,8 +107,8 @@ export const ChooseRolePage: React.FC = () => {
                   Fastest
                 </span>
               </div>
-              <span className="text-xs text-on-surface-variant font-medium uppercase tracking-wider mb-1">
-                Instant Access
+              <span className="text-xs text-on-surface-variant font-medium mb-1">
+                Instant access
               </span>
               <h2 className="text-xl font-bold text-on-surface mb-3 group-hover:text-primary transition-colors">
                 One-Time Buyer
@@ -141,8 +141,8 @@ export const ChooseRolePage: React.FC = () => {
                   Full History
                 </span>
               </div>
-              <span className="text-xs text-on-surface-variant font-medium uppercase tracking-wider mb-1">
-                Personal Account
+              <span className="text-xs text-on-surface-variant font-medium mb-1">
+                Personal account
               </span>
               <h2 className="text-xl font-bold text-on-surface mb-3 group-hover:text-primary transition-colors">
                 Registered Buyer
@@ -175,8 +175,8 @@ export const ChooseRolePage: React.FC = () => {
                   Licensed
                 </span>
               </div>
-              <span className="text-xs text-on-surface-variant font-medium uppercase tracking-wider mb-1">
-                Professional
+              <span className="text-xs text-on-surface-variant font-medium mb-1">
+                Professional broker
               </span>
               <h2 className="text-xl font-bold text-on-surface mb-3 group-hover:text-primary transition-colors">
                 Delala Broker

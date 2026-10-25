@@ -66,7 +66,7 @@ export const AuthHeader: React.FC<AuthHeaderProps> = ({ onNavigate }) => {
                     <span className="hidden sm:inline">Upgrade Account</span>
                   </button>
                 ) : (
-                  <span className="hidden sm:inline-block px-2 py-0.5 rounded text-[11px] font-semibold uppercase tracking-wider bg-surface-container-high text-on-surface-variant">
+                  <span className="hidden sm:inline-block px-2 py-0.5 rounded text-xs font-medium bg-surface-container-high text-on-surface-variant capitalize">
                     {user.type}
                   </span>
                 )}

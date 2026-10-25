@@ -95,13 +95,13 @@ export const PostJobPage: React.FC = () => {
     <div className="max-w-xl mx-auto py-4 sm:py-8 space-y-8">
       {/* Step Indicator Header */}
       <div className="text-center space-y-2">
-        <span className="px-3 py-1 rounded-full bg-[var(--app-primary-light)] text-[var(--app-primary)] text-xs font-bold uppercase tracking-wider">
-          Step {step} of 3 • Escrow Requirement
+        <span className="px-3 py-1 rounded-full bg-[var(--app-primary-light)] text-[var(--app-primary)] text-xs font-medium">
+          Step {step} of 3, escrow requirement
         </span>
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--app-text)]">
-          {step === 1 && 'Select Requirement Category'}
-          {step === 2 && `Specify ${subCategory} Details`}
-          {step === 3 && 'Location & Budget Target'}
+          {step === 1 && 'Select requirement category'}
+          {step === 2 && `Specify ${subCategory} details`}
+          {step === 3 && 'Location and budget target'}
         </h1>
         <p className="text-xs text-[var(--app-text-muted)] max-w-sm mx-auto">
           {step === 1 && 'Choose the type of asset or service you are acquiring through escrow.'}
@@ -429,7 +429,7 @@ export const PostJobPage: React.FC = () => {
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <span className="text-[10px] text-[var(--app-text-muted)] uppercase tracking-wider font-semibold block mb-1">Min Target</span>
+                    <span className="text-xs font-medium text-[var(--app-text-muted)] block mb-1">Minimum target</span>
                     <input
                       type="number"
                       value={minBudget}
@@ -438,7 +438,7 @@ export const PostJobPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <span className="text-[10px] text-[var(--app-text-muted)] uppercase tracking-wider font-semibold block mb-1">Max Ceiling</span>
+                    <span className="text-xs font-medium text-[var(--app-text-muted)] block mb-1">Maximum ceiling</span>
                     <input
                       type="number"
                       value={maxBudget}
